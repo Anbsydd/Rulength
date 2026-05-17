@@ -10,25 +10,25 @@ import util.ImageManager;
 
 public class Game {
 
-    private final SceneSet sceneSet;
+    private final Stage stage;
 
-    public Game(SceneSet sceneSet) {
-        this.sceneSet = sceneSet;
+    public Game(Stage stage) {
+        this.stage = stage;
         initRoot();
     }
 
     private void initRoot() {
-        StackPane root = sceneSet.getRoot();
+        StackPane root = stage.getRoot();
         root.setBackground(new Background(new BackgroundImage(
-                ImageManager.load("assets/uiImages/backgrounds/bg.jpg"),
+                ImageManager.load("uiImages/backgrounds/bg.jpg"),
                 BackgroundRepeat.NO_REPEAT,
                 BackgroundRepeat.NO_REPEAT,
                 BackgroundPosition.CENTER,
-                BackgroundSize.DEFAULT
+                new BackgroundSize(1, 1, true, true, false, true)
         )));
     }
 
-    public SceneSet getSceneSet() {
-        return sceneSet;
+    public Stage getStage() {
+        return stage;
     }
 }

@@ -2,13 +2,8 @@ package game;
 
 import config.ConfigLoader;
 import config.StageConfig;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 
 public class Stage {
 
@@ -17,6 +12,7 @@ public class Stage {
     private final javafx.stage.Stage javafxStage;
     private final StackPane root;
     private final Scene scene;
+    private final Game game;
 
     public Stage(javafx.stage.Stage javafxStage) throws Exception {
         this.javafxStage = javafxStage;
@@ -30,7 +26,8 @@ public class Stage {
         javafxStage.setScene(scene);
         javafxStage.setTitle(config.title);
         javafxStage.setFullScreenExitHint(config.fullScreenExitHint);
-        root.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+
+        this.game = new Game(this);
     }
 
     public javafx.stage.Stage getJavafxStage() {
@@ -43,6 +40,10 @@ public class Stage {
 
     public Scene getScene() {
         return scene;
+    }
+
+    public Game getGame() {
+        return game;
     }
 
     public void show() {

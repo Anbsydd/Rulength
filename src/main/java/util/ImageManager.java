@@ -15,8 +15,8 @@ public class ImageManager {
     private static final Map<String, Image> cache = new HashMap<>();
 
     /**
-     * 从文件路径加载图片并缩放至指定大小
-     * @param path 图片文件路径
+     * 从类路径加载图片并缩放至指定大小
+     * @param path 相对于 classpath 的图片路径
      * @param width 目标宽度
      * @param height 目标高度
      * @return 缩放后的 Image 对象
@@ -27,14 +27,20 @@ public class ImageManager {
             return cache.get(key);
         }
 
-        Image image = new Image(path, width, height, true, true);
+        InputStream is = ImageManager.class.getResourceAsStream("/" + path);
+        Image image;
+        if (is != null) {
+            image = new Image(is, width, height, true, true);
+        } else {
+            image = new Image(path, width, height, true, true);
+        }
         cache.put(key, image);
         return image;
     }
 
     /**
-     * 从文件路径加载原始大小图片
-     * @param path 图片文件路径
+     * 从类路径加载图片（原始大小）
+     * @param path 相对于 classpath 的图片路径
      * @return 原始大小的 Image 对象
      */
     public static Image load(String path) {
@@ -42,7 +48,13 @@ public class ImageManager {
             return cache.get(path);
         }
 
-        Image image = new Image(path);
+        InputStream is = ImageManager.class.getResourceAsStream("/" + path);
+        Image image;
+        if (is != null) {
+            image = new Image(is);
+        } else {
+            image = new Image(path);
+        }
         cache.put(path, image);
         return image;
     }
@@ -107,7 +119,13 @@ public class ImageManager {
             return cache.get(key);
         }
 
-        Image image = new Image(path, targetWidth, targetHeight, true, true);
+        InputStream is = ImageManager.class.getResourceAsStream("/" + path);
+        Image image;
+        if (is != null) {
+            image = new Image(is, targetWidth, targetHeight, true, true);
+        } else {
+            image = new Image(path, targetWidth, targetHeight, true, true);
+        }
         cache.put(key, image);
         return image;
     }
