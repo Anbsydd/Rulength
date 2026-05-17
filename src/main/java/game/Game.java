@@ -1,11 +1,12 @@
 package game;
 
-import javafx.geometry.Insets;
 import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
+import util.ImageManager;
 
 public class Game {
 
@@ -18,7 +19,13 @@ public class Game {
 
     private void initRoot() {
         StackPane root = sceneSet.getRoot();
-        root.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+        root.setBackground(new Background(new BackgroundImage(
+                ImageManager.load("assets/uiImages/backgrounds/bg.jpg"),
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundPosition.CENTER,
+                BackgroundSize.DEFAULT
+        )));
     }
 
     public SceneSet getSceneSet() {
