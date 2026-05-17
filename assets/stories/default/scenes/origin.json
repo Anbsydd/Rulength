@@ -1,0 +1,11 @@
+{
+  "name": "",
+  "description": "",
+  "size": "200",
+  "isWide": false,
+  "minScale": 1,
+  "maxScale": 2000000000,
+  "defaultScale": 1,
+  "defaultX": 0,
+  "defaultY": 0
+}

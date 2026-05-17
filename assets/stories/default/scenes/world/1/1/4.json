@@ -1,0 +1,11 @@
+{
+  "name": "图书馆",
+  "description": "图书馆",
+  "size": "20",
+  "isWide": false,
+  "minScale": 1,
+  "maxScale": 2000000000,
+  "defaultScale": 1,
+  "defaultX": 100,
+  "defaultY": 100
+}

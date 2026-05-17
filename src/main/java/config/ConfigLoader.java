@@ -17,7 +17,7 @@ public class ConfigLoader {
      * @return 赋值完成的类实例对象
      * @throws Exception 各种异常
      */
-    public static Object getClass(String filePath, Class<?> clazz) throws Exception {
+    public static <T> T loadConfig(String filePath, Class<T> clazz) throws Exception {
         // 1. 读取文件内容
         String json = new String(Files.readAllBytes(Paths.get(filePath)));
         
@@ -25,7 +25,7 @@ public class ConfigLoader {
         Map<String, Object> configMap = objectMapper.readValue(json, Map.class);
         
         // 3. 创建一个新对象
-        Object instance = clazz.getDeclaredConstructor().newInstance();
+        T instance = clazz.getDeclaredConstructor().newInstance();
         
         // 4. 反射遍历所有字段，自动赋值（支持任意字段名）
         Field[] fields = clazz.getDeclaredFields();
@@ -39,11 +39,15 @@ public class ConfigLoader {
                 if (field.getType() == int.class) {
                     field.setInt(instance, ((Number) value).intValue());
                 }
-                // 处理 String 类型
-                else if (field.getType() == String.class) {
-                    field.set(instance, value);
+                // 处理 double 类型
+                else if (field.getType() == double.class) {
+                    field.setDouble(instance, ((Number) value).doubleValue());
                 }
-                // 其他类型可以自己扩展
+                // 处理 boolean 类型
+                else if (field.getType() == boolean.class) {
+                    field.setBoolean(instance, Boolean.parseBoolean(value.toString()));
+                }
+                // 其他类型直接赋值
                 else {
                     field.set(instance, value);
                 }
