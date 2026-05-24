@@ -5,6 +5,7 @@ import javafx.scene.layout.StackPane;
 import post.EventBus;
 import post.ui.StageSizeChange;
 import util.ImageManager;
+import util.PaneSizeManager;
 
 import java.util.concurrent.*;
 
@@ -19,16 +20,13 @@ public class Game {
         mainPool = new ThreadPoolExecutor(4, 8, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
         this.stage = stage;
         initRoot();
-        startMenu = new StackPane();
-        root.getChildren().add(startMenu);
         initStartMenu();
+        root.getChildren().add(startMenu);
     }
     
     private void initStartMenu() {
-        // startMenu层：绑定尺寸到root
-        startMenu.prefWidthProperty().bind(root.widthProperty());
-        startMenu.prefHeightProperty().bind(root.heightProperty());
-        
+        startMenu = new StackPane();
+        PaneSizeManager.add(startMenu,1);
         ImageView bgView = new ImageView(ImageManager.load("uiImages/backgrounds/bg.jpg"));
         bgView.setPreserveRatio(false);
         bgView.setSmooth(true);
