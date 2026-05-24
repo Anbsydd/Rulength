@@ -20,14 +20,13 @@ public class Stage {
         this.scene = new Scene(root);
 
         StageConfig config = ConfigLoader.loadConfig(CONFIG_PATH, StageConfig.class);
-
-        javafxStage.setWidth(config.width);
-        javafxStage.setHeight(config.height);
         javafxStage.setScene(scene);
         javafxStage.setTitle(config.title);
         javafxStage.setFullScreenExitHint(config.fullScreenExitHint);
         javafxStage.show();
         this.game = new Game(this);
+        javafxStage.setWidth(config.width);
+        javafxStage.setHeight(config.height);
     }
 
     public javafx.stage.Stage getJavafxStage() {
