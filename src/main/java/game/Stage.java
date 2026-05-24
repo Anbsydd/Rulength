@@ -26,7 +26,7 @@ public class Stage {
         javafxStage.setScene(scene);
         javafxStage.setTitle(config.title);
         javafxStage.setFullScreenExitHint(config.fullScreenExitHint);
-
+        javafxStage.show();
         this.game = new Game(this);
     }
 
