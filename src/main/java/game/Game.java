@@ -1,10 +1,6 @@
 package game;
 
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundRepeat;
-import javafx.scene.layout.BackgroundSize;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import util.ImageManager;
 
@@ -19,13 +15,16 @@ public class Game {
 
     private void initRoot() {
         StackPane root = stage.getRoot();
-        root.setBackground(new Background(new BackgroundImage(
-                ImageManager.load("uiImages/backgrounds/bg.jpg"),
-                BackgroundRepeat.NO_REPEAT,
-                BackgroundRepeat.NO_REPEAT,
-                BackgroundPosition.CENTER,
-                new BackgroundSize(1, 1, true, true, false, true)
-        )));
+
+        ImageView bgView = new ImageView(ImageManager.load("uiImages/backgrounds/bg.jpg"));
+        bgView.setPreserveRatio(false);
+        bgView.setSmooth(true);
+
+        // 绑定ImageView尺寸到root，实现随窗口缩放
+        bgView.fitWidthProperty().bind(root.widthProperty());
+        bgView.fitHeightProperty().bind(root.heightProperty());
+
+        root.getChildren().add(bgView);
     }
 
     public Stage getStage() {
