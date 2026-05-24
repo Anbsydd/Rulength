@@ -27,6 +27,7 @@ public class Game {
     private void initStartMenu() {
         startMenu = new StackPane();
         PaneSizeManager.add(startMenu,1);
+        PaneSizeManager.set(startMenu, root.getWidth(), root.getHeight());
         ImageView bgView = new ImageView(ImageManager.load("uiImages/backgrounds/bg.jpg"));
         bgView.setPreserveRatio(false);
         bgView.setSmooth(true);

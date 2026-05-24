@@ -20,4 +20,18 @@ public class PaneSizeManager {
     public static void add(Pane pane, double multiply) {
         add(pane, multiply, multiply);
     }
+    public static void set(Pane pane, double width, double height, double widthMultiply, double heightMultiply) {
+        pane.setMaxWidth(width*widthMultiply);
+        pane.setMaxHeight(height*heightMultiply);
+        pane.setMinWidth(width*widthMultiply);
+        pane.setMinHeight(height*heightMultiply);
+        pane.setPrefWidth(width*widthMultiply);
+        pane.setPrefHeight(height*heightMultiply);
+    }
+    public static void set(Pane pane, double width, double height, double multiply) {
+        set(pane, width, height, multiply, multiply);
+    }
+    public static void set(Pane pane, double width, double height) {
+        set(pane, width, height, 1);
+    }
 }
