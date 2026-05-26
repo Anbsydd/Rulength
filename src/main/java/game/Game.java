@@ -1,6 +1,8 @@
 package game;
 
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
 import post.EventBus;
 import post.ui.StageSizeChange;
@@ -15,6 +17,7 @@ public class Game {
     StackPane root;
     StackPane startMenu;
     StackPane map;
+    game.Camera camera;
     public static ExecutorService mainPool;
     public Game(Stage stage) {
         bus = new EventBus();
@@ -23,10 +26,24 @@ public class Game {
         initRoot();
 //        initStartMenu();
         initMap();
-        root.getChildren().add(map);
+        initCamera();
+        root.getChildren().addAll(map, camera);
 //        root.getChildren().add(startMenu);
     }
     
+    private void initCamera() {
+        camera = new Camera(root);
+        PaneSizeManager.add(camera,1);
+        PaneSizeManager.set(camera, root.getWidth(), root.getHeight());
+        camera.setPickOnBounds(true);
+        camera.addEventFilter(ScrollEvent.ANY, e->{
+            Camera.Scaling s = camera.scrolled(e);
+            if (s != null) {bus.publish(s);}
+        });
+        camera.addEventFilter(MouseEvent.MOUSE_PRESSED, this::pressed);
+        camera.addEventFilter(MouseEvent.MOUSE_DRAGGED, this::dragged);
+        
+    }
     
     private void initRoot() {
         root = stage.getRoot();
