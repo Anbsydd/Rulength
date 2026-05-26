@@ -40,8 +40,13 @@ public class Game {
             Camera.Scaling s = camera.scrolled(e);
             if (s != null) {bus.publish(s);}
         });
-        camera.addEventFilter(MouseEvent.MOUSE_PRESSED, this::pressed);
-        camera.addEventFilter(MouseEvent.MOUSE_DRAGGED, this::dragged);
+        camera.addEventFilter(MouseEvent.MOUSE_PRESSED, e->{
+            camera.pressed(e);
+        });
+        camera.addEventFilter(MouseEvent.MOUSE_DRAGGED, e->{
+            Camera.Move m = camera.dragged(e);
+            if (m != null) {bus.publish(m);}
+        });
         
     }
     

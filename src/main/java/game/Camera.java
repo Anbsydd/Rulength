@@ -27,7 +27,7 @@ public class Camera extends StackPane {
     private double dragStartMouseX,dragStartMouseY;
     // 右键按下时的地图初始偏移（相对于屏幕中心）
     private double oldTraX,oldTraY;
-    private void pressed(MouseEvent e) {
+    public void pressed(MouseEvent e) {
         if (!e.isSecondaryButtonDown()) return;
         pt.stop();
         dragStartMouseX = e.getScreenX();
@@ -35,7 +35,7 @@ public class Camera extends StackPane {
         oldTraX = getTranslateX();
         oldTraY = getTranslateY();
     }
-    private Move dragged(MouseEvent e) {
+    public Move dragged(MouseEvent e) {
         if (!e.isSecondaryButtonDown()) return null;
         pt.stop();
         double deltaX = e.getScreenX() - dragStartMouseX;
