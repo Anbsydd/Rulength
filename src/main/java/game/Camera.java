@@ -9,7 +9,7 @@ import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 
 public class Camera extends StackPane {
-    private StackPane root;
+    private final StackPane root;
     public Camera(StackPane root) {
         this.root = root;
     }
@@ -19,7 +19,7 @@ public class Camera extends StackPane {
     private double traX = 0;
     private double traY = 0;
     private final double zoomFactor = 1.4;
-    ParallelTransition pt;
+    ParallelTransition pt= new ParallelTransition();
     /**视角的控制与事件发送
      * 监听鼠标
      */
