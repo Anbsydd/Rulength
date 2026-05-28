@@ -21,9 +21,6 @@ public class Game {
     Camera camera;
     public static ExecutorService mainPool;
 
-    // 地图逻辑尺寸（原始图片尺寸，用于 Camera 边界约束）
-    private static final double MAP_LOGICAL_WIDTH = 3840;
-    private static final double MAP_LOGICAL_HEIGHT = 2160;
 
     // Camera 配置文件路径
     private static final String CAMERA_CONFIG_PATH = "assets/cameraConfig.json";
@@ -86,7 +83,7 @@ public class Game {
 
     private void initCamera() throws Exception {
         CameraConfig cameraConfig = ConfigLoader.loadConfig(CAMERA_CONFIG_PATH, CameraConfig.class);
-        camera = new Camera(cameraConfig, MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
+        camera = new Camera(cameraConfig, root.getWidth(), root.getHeight());
     }
     private void sendRootSizeChangedEvent(double width, double height) {
         bus.publish(new StageSizeChange(width, height));
