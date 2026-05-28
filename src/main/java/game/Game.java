@@ -3,6 +3,7 @@ package game;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import post.EventBus;
+import post.ui.MapTransformEvent;
 import post.ui.StageSizeChange;
 import util.ImageManager;
 import util.PaneSizeManager;
@@ -15,7 +16,17 @@ public class Game {
     StackPane root;
     StackPane startMenu;
     StackPane map;
+    Camera camera;
     public static ExecutorService mainPool;
+
+    // 地图逻辑尺寸（原始图片尺寸，用于 Camera 边界约束）
+    private static final double MAP_LOGICAL_WIDTH = 3840;
+    private static final double MAP_LOGICAL_HEIGHT = 2160;
+
+    // 缩放范围
+    private static final double MIN_ZOOM = 0.3;
+    private static final double MAX_ZOOM = 3.0;
+
     public Game(Stage stage) {
         bus = new EventBus();
         mainPool = new ThreadPoolExecutor(4, 8, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
@@ -24,7 +35,10 @@ public class Game {
 //        initStartMenu();
 //        root.getChildren().add(startMenu);
         initMap();
+        initCamera();
+        // 先添加 map（底层），再添加 camera（顶层，拦截输入）
         root.getChildren().add(map);
+        root.getChildren().add(camera.getPane());
     }
     
     
@@ -50,14 +64,29 @@ public class Game {
     }
     private void initMap() {
         map = new StackPane();
-        PaneSizeManager.add(map,1);
-        PaneSizeManager.set(map, root.getWidth(), root.getHeight());
+        // map 使用地图逻辑尺寸，不再跟随窗口大小
+        map.setPrefSize(MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
+        map.setMaxSize(MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
+        map.setMinSize(MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
+
         ImageView bgView = new ImageView(ImageManager.load("uiImages/backgrounds/map.png"));
         bgView.setPreserveRatio(false);
         bgView.setSmooth(true);
-        bgView.fitWidthProperty().bind(map.widthProperty());
-        bgView.fitHeightProperty().bind(map.heightProperty());
+        bgView.setFitWidth(MAP_LOGICAL_WIDTH);
+        bgView.setFitHeight(MAP_LOGICAL_HEIGHT);
         map.getChildren().add(bgView);
+
+        // 订阅 MapTransformEvent，应用平移和缩放
+        bus.subscribe(MapTransformEvent.class, (MapTransformEvent event) -> {
+            map.setTranslateX(event.offsetX());
+            map.setTranslateY(event.offsetY());
+            map.setScaleX(event.zoom());
+            map.setScaleY(event.zoom());
+        });
+    }
+
+    private void initCamera() {
+        camera = new Camera(MIN_ZOOM, MAX_ZOOM, MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
     }
     private void sendRootSizeChangedEvent(double width, double height) {
         bus.publish(new StageSizeChange(width, height));
