@@ -65,22 +65,30 @@ public class Game {
     }
     private void initMap() {
         map = new StackPane();
-        PaneSizeManager.add(map,1);
-        PaneSizeManager.set(map, root.getWidth(), root.getHeight());
+        // map 使用地图逻辑尺寸，不再跟随窗口大小
+        // Camera 的边界约束基于此逻辑尺寸计算
+        map.setPrefSize(MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
+        map.setMaxSize(MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
+        map.setMinSize(MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
 
         ImageView bgView = new ImageView(ImageManager.load("uiImages/backgrounds/map.png"));
         bgView.setPreserveRatio(false);
         bgView.setSmooth(true);
-        bgView.fitWidthProperty().bind(map.widthProperty());
-        bgView.fitHeightProperty().bind(map.heightProperty());
+        bgView.setFitWidth(MAP_LOGICAL_WIDTH);
+        bgView.setFitHeight(MAP_LOGICAL_HEIGHT);
         map.getChildren().add(bgView);
 
         // 订阅 MapTransformEvent，应用平移和缩放
+        // JavaFX 默认以节点中心为缩放原点，但 Camera 的 offsetX/offsetY 是以左上角计算的
+        // 所以需要在 translate 中补偿缩放原点偏移：
+        //   实际位置 = offset - (中心偏移 * (zoom - 1))
+        //   即 offset - (size/2 * (zoom - 1))
         bus.subscribe(MapTransformEvent.class, (MapTransformEvent event) -> {
-            map.setTranslateX(event.offsetX());
-            map.setTranslateY(event.offsetY());
-            map.setScaleX(event.zoom());
-            map.setScaleY(event.zoom());
+            double z = event.zoom();
+            map.setTranslateX(event.offsetX() - MAP_LOGICAL_WIDTH / 2.0 * (z - 1));
+            map.setTranslateY(event.offsetY() - MAP_LOGICAL_HEIGHT / 2.0 * (z - 1));
+            map.setScaleX(z);
+            map.setScaleY(z);
         });
     }
 

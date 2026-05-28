@@ -102,13 +102,16 @@ public class Camera extends StackPane {
         setOnScroll((ScrollEvent event) -> {
             event.consume();
 
-            double delta = event.getDeltaY() > 0 ? ZOOM_STEP : -ZOOM_STEP;
-            double newZoom = clampZoom(zoom + delta);
+            // 乘法缩放：每次滚轮 zoom 乘/除步进倍率，体验更自然
+            double newZoom = clampZoom(event.getDeltaY() > 0
+                    ? zoom * ZOOM_STEP
+                    : zoom / ZOOM_STEP);
             if (newZoom == zoom) return; // 缩放无变化，不发送事件
 
             // 以鼠标位置为中心缩放
-            double mouseX = event.getX()-viewportWidth ;
-            double mouseY = event.getY()-viewportHeight;
+            // event.getX/Y 在 Camera 局部坐标系中，原点(0,0)在左上角
+            double mouseX = event.getX();
+            double mouseY = event.getY();
 
             // 计算缩放前鼠标指向的地图坐标
             double mapPointX = (mouseX - offsetX) / zoom;
@@ -126,8 +129,8 @@ public class Camera extends StackPane {
 
         // ---- 拖拽平移 ----
         setOnMousePressed(event -> {
-            dragStartX = event.getX()-viewportWidth ;
-            dragStartY = event.getY()-viewportHeight;
+            dragStartX = event.getX();
+            dragStartY = event.getY();
             dragStartOffsetX = offsetX;
             dragStartOffsetY = offsetY;
             isDragging = true;
@@ -138,8 +141,8 @@ public class Camera extends StackPane {
             if (!isDragging) return;
             event.consume();
 
-            double dx = event.getX()-viewportWidth - dragStartX;
-            double dy = event.getY()-viewportHeight - dragStartY;
+            double dx = event.getX() - dragStartX;
+            double dy = event.getY() - dragStartY;
 
             offsetX = dragStartOffsetX + dx;
             offsetY = dragStartOffsetY + dy;
@@ -163,11 +166,10 @@ public class Camera extends StackPane {
         offsetX = clampOffsetX(offsetX);
         offsetY = clampOffsetY(offsetY);
 
-        // 只有状态真正变化时才发布事件
-        if (offsetX != oldOffsetX || offsetY != oldOffsetY || true) {
-            // 注意：缩放变化时 offset 可能被 clamp 回原值，但 zoom 变了也需要发布
-            publishTransform();
-        }
+        // 偏移或缩放有变化时才发布事件
+        // zoom 在调用此方法前已更新，所以只需比较 offset 是否被 clamp 改变
+        // 如果 offset 没变，zoom 也一定已更新（由调用方保证），仍需发布
+        publishTransform();
     }
 
     /**
