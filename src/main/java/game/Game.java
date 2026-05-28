@@ -1,5 +1,7 @@
 package game;
 
+import config.CameraConfig;
+import config.ConfigLoader;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import post.EventBus;
@@ -23,11 +25,10 @@ public class Game {
     private static final double MAP_LOGICAL_WIDTH = 3840;
     private static final double MAP_LOGICAL_HEIGHT = 2160;
 
-    // 缩放范围
-    private static final double MIN_ZOOM = 0.3;
-    private static final double MAX_ZOOM = 3.0;
+    // Camera 配置文件路径
+    private static final String CAMERA_CONFIG_PATH = "assets/cameraConfig.json";
 
-    public Game(Stage stage) {
+    public Game(Stage stage) throws Exception {
         bus = new EventBus();
         mainPool = new ThreadPoolExecutor(4, 8, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
         this.stage = stage;
@@ -38,7 +39,7 @@ public class Game {
         initCamera();
         // 先添加 map（底层），再添加 camera（顶层，拦截输入）
         root.getChildren().add(map);
-        root.getChildren().add(camera.getPane());
+        root.getChildren().add(camera);
     }
     
     
@@ -85,8 +86,9 @@ public class Game {
         });
     }
 
-    private void initCamera() {
-        camera = new Camera(MIN_ZOOM, MAX_ZOOM, MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
+    private void initCamera() throws Exception {
+        CameraConfig cameraConfig = ConfigLoader.loadConfig(CAMERA_CONFIG_PATH, CameraConfig.class);
+        camera = new Camera(cameraConfig, MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
     }
     private void sendRootSizeChangedEvent(double width, double height) {
         bus.publish(new StageSizeChange(width, height));

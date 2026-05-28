@@ -1,5 +1,6 @@
 package game;
 
+import config.CameraConfig;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
 import post.ui.MapTransformEvent;
@@ -23,17 +24,20 @@ import static game.Game.bus;
 public class Camera extends StackPane {
 
 
-    // ---- 视窗状态 ----
-    private double offsetX = 0;
-    private double offsetY = 0;
-    private double zoom = 1.0;
+    // ---- 配置 ----
+    private CameraConfig config;
 
-    // ---- 缩放限制 ----
-    private double minZoom = 1;
-    private double maxZoom = 2000000;
+    // ---- 视窗状态（从配置注入初始值）----
+    private double offsetX;
+    private double offsetY;
+    private double zoom;
 
-    // ---- 缩放步进 ----
-    private static final double ZOOM_STEP = 0.1;
+    // ---- 缩放限制（从配置注入）----
+    private double minZoom;
+    private double maxZoom;
+
+    // ---- 缩放步进（从配置注入）----
+    private double ZOOM_STEP;
 
     // ---- 地图逻辑尺寸（用于边界约束）----
     private double mapWidth;
@@ -51,14 +55,13 @@ public class Camera extends StackPane {
     private boolean isDragging = false;
 
     /**
-     * @param minZoom   最小缩放倍率
-     * @param maxZoom   最大缩放倍率
+     * 通过 CameraConfig 注入配置
+     * @param config    相机配置（从 JSON 加载）
      * @param mapWidth  地图逻辑宽度（像素）
      * @param mapHeight 地图逻辑高度（像素）
      */
-    public Camera(double minZoom, double maxZoom, double mapWidth, double mapHeight) {
-        this.minZoom = minZoom;
-        this.maxZoom = maxZoom;
+    public Camera(CameraConfig config, double mapWidth, double mapHeight) {
+        use(config);
         this.mapWidth = mapWidth;
         this.mapHeight = mapHeight;
 
@@ -66,7 +69,15 @@ public class Camera extends StackPane {
         initInputHandlers();
         initViewportListener();
     }
-
+    public void use(CameraConfig config){
+        this.config = config;
+        this.offsetX = config.offsetX;
+        this.offsetY = config.offsetY;
+        this.zoom = config.zoom;
+        this.minZoom = config.minZoom;
+        this.maxZoom = config.maxZoom;
+        this.ZOOM_STEP = config.ZOOM_STEP;
+    }
     private void initCameraPane() {
         // camera 透明，不拦截背景绘制，但拦截鼠标事件
         setPickOnBounds(true);
