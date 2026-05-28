@@ -65,16 +65,14 @@ public class Game {
     }
     private void initMap() {
         map = new StackPane();
-        // map 使用地图逻辑尺寸，不再跟随窗口大小
-        map.setPrefSize(MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
-        map.setMaxSize(MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
-        map.setMinSize(MAP_LOGICAL_WIDTH, MAP_LOGICAL_HEIGHT);
+        PaneSizeManager.add(map,1);
+        PaneSizeManager.set(map, root.getWidth(), root.getHeight());
 
         ImageView bgView = new ImageView(ImageManager.load("uiImages/backgrounds/map.png"));
         bgView.setPreserveRatio(false);
         bgView.setSmooth(true);
-        bgView.setFitWidth(MAP_LOGICAL_WIDTH);
-        bgView.setFitHeight(MAP_LOGICAL_HEIGHT);
+        bgView.fitWidthProperty().bind(map.widthProperty());
+        bgView.fitHeightProperty().bind(map.heightProperty());
         map.getChildren().add(bgView);
 
         // 订阅 MapTransformEvent，应用平移和缩放
