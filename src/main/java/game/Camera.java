@@ -21,12 +21,14 @@ import static game.Game.bus;
  *     ├── map   (StackPane) — 地图背景，被平移/缩放
  *     └── camera (StackPane) — 本类，接收指令，不移动
  */
+//    逻辑：滚轮缩放、右键拖拽移动
+//    缩放、移动记录需要缩放及移动的大小与距离
+//    进行边界约束、缩放限制检测
+//    判断是否需要进行实际移动与缩放
+//    缩放与移动
 public class Camera extends StackPane {
-
-
-    // ---- 配置 ----
-    private CameraConfig config;
-
+    
+    
     // ---- 视窗状态（从配置注入初始值）----
     private double offsetX;
     private double offsetY;
@@ -70,7 +72,7 @@ public class Camera extends StackPane {
         initViewportListener();
     }
     public void use(CameraConfig config){
-        this.config = config;
+        // ---- 配置 ----
         this.offsetX = config.offsetX;
         this.offsetY = config.offsetY;
         this.zoom = config.zoom;
@@ -105,8 +107,8 @@ public class Camera extends StackPane {
             if (newZoom == zoom) return; // 缩放无变化，不发送事件
 
             // 以鼠标位置为中心缩放
-            double mouseX = event.getX();
-            double mouseY = event.getY();
+            double mouseX = event.getX()-viewportWidth ;
+            double mouseY = event.getY()-viewportHeight;
 
             // 计算缩放前鼠标指向的地图坐标
             double mapPointX = (mouseX - offsetX) / zoom;
@@ -124,8 +126,8 @@ public class Camera extends StackPane {
 
         // ---- 拖拽平移 ----
         setOnMousePressed(event -> {
-            dragStartX = event.getX();
-            dragStartY = event.getY();
+            dragStartX = event.getX()-viewportWidth ;
+            dragStartY = event.getY()-viewportHeight;
             dragStartOffsetX = offsetX;
             dragStartOffsetY = offsetY;
             isDragging = true;
@@ -136,8 +138,8 @@ public class Camera extends StackPane {
             if (!isDragging) return;
             event.consume();
 
-            double dx = event.getX() - dragStartX;
-            double dy = event.getY() - dragStartY;
+            double dx = event.getX()-viewportWidth - dragStartX;
+            double dy = event.getY()-viewportHeight - dragStartY;
 
             offsetX = dragStartOffsetX + dx;
             offsetY = dragStartOffsetY + dy;
