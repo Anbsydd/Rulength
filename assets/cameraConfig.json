@@ -1,0 +1,8 @@
+{
+  "offsetX" : 0,
+  "offsetY" : 0,
+  "zoom" : 1.0,
+  "minZoom" : 1.0,
+  "maxZoom" : 2000000,
+  "ZOOM_STEP" : 1.4
+}

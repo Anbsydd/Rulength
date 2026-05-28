@@ -20,9 +20,8 @@ import static game.Game.bus;
  *     ├── map   (StackPane) — 地图背景，被平移/缩放
  *     └── camera (StackPane) — 本类，接收指令，不移动
  */
-public class Camera {
+public class Camera extends StackPane {
 
-    private final StackPane camera;
 
     // ---- 视窗状态 ----
     private double offsetX = 0;
@@ -30,8 +29,8 @@ public class Camera {
     private double zoom = 1.0;
 
     // ---- 缩放限制 ----
-    private final double minZoom;
-    private final double maxZoom;
+    private double minZoom = 1;
+    private double maxZoom = 2000000;
 
     // ---- 缩放步进 ----
     private static final double ZOOM_STEP = 0.1;
@@ -58,7 +57,6 @@ public class Camera {
      * @param mapHeight 地图逻辑高度（像素）
      */
     public Camera(double minZoom, double maxZoom, double mapWidth, double mapHeight) {
-        this.camera = new StackPane();
         this.minZoom = minZoom;
         this.maxZoom = maxZoom;
         this.mapWidth = mapWidth;
@@ -71,9 +69,9 @@ public class Camera {
 
     private void initCameraPane() {
         // camera 透明，不拦截背景绘制，但拦截鼠标事件
-        camera.setPickOnBounds(true);
+        setPickOnBounds(true);
         // camera 尺寸始终等于窗口尺寸
-        PaneSizeManager.add(camera, 1);
+        PaneSizeManager.add(this, 1);
     }
 
     private void initViewportListener() {
@@ -88,7 +86,7 @@ public class Camera {
 
     private void initInputHandlers() {
         // ---- 滚轮缩放 ----
-        camera.setOnScroll((ScrollEvent event) -> {
+        setOnScroll((ScrollEvent event) -> {
             event.consume();
 
             double delta = event.getDeltaY() > 0 ? ZOOM_STEP : -ZOOM_STEP;
@@ -114,7 +112,7 @@ public class Camera {
         });
 
         // ---- 拖拽平移 ----
-        camera.setOnMousePressed(event -> {
+        setOnMousePressed(event -> {
             dragStartX = event.getX();
             dragStartY = event.getY();
             dragStartOffsetX = offsetX;
@@ -123,7 +121,7 @@ public class Camera {
             event.consume();
         });
 
-        camera.setOnMouseDragged(event -> {
+        setOnMouseDragged(event -> {
             if (!isDragging) return;
             event.consume();
 
@@ -136,7 +134,7 @@ public class Camera {
             clampAndPublish();
         });
 
-        camera.setOnMouseReleased(event -> {
+        setOnMouseReleased(event -> {
             isDragging = false;
             event.consume();
         });
@@ -204,11 +202,6 @@ public class Camera {
         return Math.max(minOffset, Math.min(maxOffset, oy));
     }
 
-    // ---- Getter ----
-
-    public StackPane getPane() {
-        return camera;
-    }
 
     public double getOffsetX() {
         return offsetX;
