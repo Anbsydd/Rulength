@@ -41,10 +41,6 @@ public class Camera extends StackPane {
     // ---- 缩放步进（从配置注入）----
     private double ZOOM_STEP;
 
-    // ---- 地图逻辑尺寸（用于边界约束）----
-    private double mapWidth;
-    private double mapHeight;
-
     // ---- 视口尺寸（camera 自身尺寸 = 窗口尺寸）----
     private double viewportWidth;
     private double viewportHeight;
@@ -56,16 +52,10 @@ public class Camera extends StackPane {
     private double dragStartOffsetY;
     private boolean isDragging = false;
 
-    /**
-     * 通过 CameraConfig 注入配置
-     * @param config    相机配置（从 JSON 加载）
-     * @param mapWidth  地图逻辑宽度（像素）
-     * @param mapHeight 地图逻辑高度（像素）
-     */
-    public Camera(CameraConfig config, double mapWidth, double mapHeight) {
+    public Camera(CameraConfig config, double width, double height) {
         use(config);
-        this.mapWidth = mapWidth;
-        this.mapHeight = mapHeight;
+        viewportWidth = width;
+        viewportHeight = height;
 
         initCameraPane();
         initInputHandlers();
@@ -90,6 +80,9 @@ public class Camera extends StackPane {
     private void initViewportListener() {
         // 监听窗口大小变化，更新视口尺寸
         bus.subscribe(StageSizeChange.class, (StageSizeChange event) -> {
+            if (event.width()==0||event.height()==0) return;
+            offsetX=offsetX*event.width()/viewportWidth;
+            offsetY=offsetY*event.height()/viewportHeight;
             viewportWidth = event.width();
             viewportHeight = event.height();
             // 窗口变化后，重新约束偏移（可能需要回弹）
@@ -102,24 +95,22 @@ public class Camera extends StackPane {
         setOnScroll((ScrollEvent event) -> {
             event.consume();
 
-            double delta = event.getDeltaY() > 0 ? ZOOM_STEP : -ZOOM_STEP;
-            double newZoom = clampZoom(zoom + delta);
+            double delta = event.getDeltaY() > 0 ? ZOOM_STEP : 1/ZOOM_STEP;
+            double newZoom = Math.max(minZoom, Math.min(maxZoom,zoom * delta));
             if (newZoom == zoom) return; // 缩放无变化，不发送事件
-
             // 以鼠标位置为中心缩放
-            double mouseX = event.getX()-viewportWidth ;
-            double mouseY = event.getY()-viewportHeight;
+            double mouseX = event.getX()-0.5*viewportWidth ;
+            double mouseY = event.getY()-0.5*viewportHeight;
 
             // 计算缩放前鼠标指向的地图坐标
-            double mapPointX = (mouseX - offsetX) / zoom;
-            double mapPointY = (mouseY - offsetY) / zoom;
-
+            double mapPointX = (mouseX + offsetX) / zoom;
+            double mapPointY = (mouseY + offsetY) / zoom;
             // 更新缩放
             zoom = newZoom;
 
             // 缩放后，让同一地图坐标仍在鼠标位置下
-            offsetX = mouseX - mapPointX * zoom;
-            offsetY = mouseY - mapPointY * zoom;
+            offsetX = mapPointX * zoom - mouseX;
+            offsetY = mapPointY * zoom - mouseY;
 
             clampAndPublish();
         });
@@ -157,17 +148,9 @@ public class Camera extends StackPane {
      * 约束偏移量到合法范围，并在状态有变化时发布事件
      */
     private void clampAndPublish() {
-        double oldOffsetX = offsetX;
-        double oldOffsetY = offsetY;
-
         offsetX = clampOffsetX(offsetX);
         offsetY = clampOffsetY(offsetY);
-
-        // 只有状态真正变化时才发布事件
-        if (offsetX != oldOffsetX || offsetY != oldOffsetY || true) {
-            // 注意：缩放变化时 offset 可能被 clamp 回原值，但 zoom 变了也需要发布
-            publishTransform();
-        }
+        publishTransform();
     }
 
     /**
@@ -176,43 +159,25 @@ public class Camera extends StackPane {
     private void publishTransform() {
         bus.publish(new MapTransformEvent(offsetX, offsetY, zoom));
     }
-
     // ---- 约束计算 ----
-
-    private double clampZoom(double z) {
-        return Math.max(minZoom, Math.min(maxZoom, z));
-    }
+    
 
     /**
      * 约束水平偏移：不允许拖出地图边界
-     * 地图可视范围 = [offsetX, offsetX + viewportWidth]
-     * 地图实际范围 = [0, mapWidth * zoom]
+     * 地图可视范围 = [offsetX - 0.5 * viewportWidth, offsetX + 0.5 * viewportWidth]
+     * 地图实际范围 = [-0.5*mapWidth * zoom, 0.5*mapWidth * zoom]
      */
     private double clampOffsetX(double ox) {
-        double scaledMapWidth = mapWidth * zoom;
-        // 如果缩放后地图比视口小，居中显示
-        if (scaledMapWidth <= viewportWidth) {
-            return (viewportWidth - scaledMapWidth) / 2;
-        }
-        // 否则约束边界
-        double minOffset = viewportWidth - scaledMapWidth; // 左边界
-        double maxOffset = 0;                               // 右边界
-        return Math.max(minOffset, Math.min(maxOffset, ox));
+        double limitWidth = 0.5*viewportWidth*(zoom-1);
+        return Math.max(-limitWidth, Math.min(limitWidth, ox));
     }
 
     /**
      * 约束垂直偏移：不允许拖出地图边界
      */
     private double clampOffsetY(double oy) {
-        double scaledMapHeight = mapHeight * zoom;
-        // 如果缩放后地图比视口小，居中显示
-        if (scaledMapHeight <= viewportHeight) {
-            return (viewportHeight - scaledMapHeight) / 2;
-        }
-        // 否则约束边界
-        double minOffset = viewportHeight - scaledMapHeight;
-        double maxOffset = 0;
-        return Math.max(minOffset, Math.min(maxOffset, oy));
+        double limitHeight = 0.5*viewportHeight *(zoom-1);
+        return Math.max(-limitHeight, Math.min(limitHeight, oy));
     }
 
 
@@ -228,12 +193,4 @@ public class Camera extends StackPane {
         return zoom;
     }
 
-    /**
-     * 更新地图逻辑尺寸（例如切换地图时调用）
-     */
-    public void setMapSize(double width, double height) {
-        this.mapWidth = width;
-        this.mapHeight = height;
-        clampAndPublish();
-    }
 }

@@ -4,5 +4,5 @@
   "zoom" : 1.0,
   "minZoom" : 1.0,
   "maxZoom" : 2000000,
-  "ZOOM_STEP" : 1.4
+  "ZOOM_STEP" : 1.1
 }
