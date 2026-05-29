@@ -117,30 +117,36 @@ public class Camera extends StackPane {
 
         // ---- 拖拽平移 ----
         setOnMousePressed(event -> {
-            dragStartX = event.getX()-viewportWidth ;
-            dragStartY = event.getY()-viewportHeight;
-            dragStartOffsetX = offsetX;
-            dragStartOffsetY = offsetY;
-            isDragging = true;
-            event.consume();
+            if (event.isSecondaryButtonDown()) {
+                dragStartX = event.getX() - viewportWidth;
+                dragStartY = event.getY() - viewportHeight;
+                dragStartOffsetX = offsetX;
+                dragStartOffsetY = offsetY;
+                isDragging = true;
+                event.consume();
+            }
         });
 
         setOnMouseDragged(event -> {
-            if (!isDragging) return;
-            event.consume();
-
-            double dx = event.getX()-viewportWidth - dragStartX;
-            double dy = event.getY()-viewportHeight - dragStartY;
-
-            offsetX = dragStartOffsetX + dx;
-            offsetY = dragStartOffsetY + dy;
-
-            clampAndPublish();
+            if (event.isSecondaryButtonDown()) {
+                if (!isDragging) return;
+                event.consume();
+                
+                double dx = event.getX() - viewportWidth - dragStartX;
+                double dy = event.getY() - viewportHeight - dragStartY;
+                
+                offsetX = dragStartOffsetX + dx;
+                offsetY = dragStartOffsetY + dy;
+                
+                clampAndPublish();
+            }
         });
 
         setOnMouseReleased(event -> {
-            isDragging = false;
-            event.consume();
+            if (event.isSecondaryButtonDown()) {
+                isDragging = false;
+                event.consume();
+            }
         });
     }
 
