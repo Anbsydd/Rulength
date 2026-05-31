@@ -1,4 +1,4 @@
-package game;
+package game.window;
 
 import config.CameraConfig;
 import javafx.scene.input.ScrollEvent;

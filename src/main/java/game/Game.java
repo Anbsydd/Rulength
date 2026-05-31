@@ -2,6 +2,8 @@ package game;
 
 import config.CameraConfig;
 import config.ConfigLoader;
+import game.window.Camera;
+import game.window.Stage;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import post.EventBus;

@@ -1,9 +1,9 @@
-import game.Stage;
+import game.window.Stage;
 import javafx.application.Application;
 
 public class App extends Application {
 
     public void start(javafx.stage.Stage javafxStage) throws Exception {
-        game.Stage stage = new Stage(javafxStage);
+        Stage stage = new Stage(javafxStage);
     }
 }

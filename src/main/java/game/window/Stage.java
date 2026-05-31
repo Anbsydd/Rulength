@@ -1,7 +1,8 @@
-package game;
+package game.window;
 
 import config.ConfigLoader;
 import config.StageConfig;
+import game.Game;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 
