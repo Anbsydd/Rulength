@@ -1,6 +1,7 @@
 package game.window;
 
 import config.CameraConfig;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
 import post.ui.MapTransformEvent;
@@ -91,65 +92,72 @@ public class Camera extends StackPane {
     }
 
     private void initInputHandlers() {
-        // ---- 滚轮缩放 ----
-        setOnScroll((ScrollEvent event) -> {
-            event.consume();
-
-            double delta = event.getDeltaY() > 0 ? ZOOM_STEP : 1/ZOOM_STEP;
-            double newZoom = Math.max(minZoom, Math.min(maxZoom,zoom * delta));
-            if (newZoom == zoom) return; // 缩放无变化，不发送事件
-            // 以鼠标位置为中心缩放
-            double mouseX = event.getX()-0.5*viewportWidth ;
-            double mouseY = event.getY()-0.5*viewportHeight;
-
-            // 计算缩放前鼠标指向的地图坐标
-            double mapPointX = (mouseX - offsetX) / zoom;
-            double mapPointY = (mouseY - offsetY) / zoom;
-            // 更新缩放
-            zoom = newZoom;
-
-            // 缩放后，让同一地图坐标仍在鼠标位置下
-            offsetX = -mapPointX * zoom + mouseX;
-            offsetY = -mapPointY * zoom + mouseY;
-
-            clampAndPublish();
-        });
-
-        // ---- 拖拽平移 ----
-        setOnMousePressed(event -> {
-            if (event.isSecondaryButtonDown()) {
-                dragStartX = event.getX() - viewportWidth;
-                dragStartY = event.getY() - viewportHeight;
-                dragStartOffsetX = offsetX;
-                dragStartOffsetY = offsetY;
-                isDragging = true;
-                event.consume();
-            }
-        });
-
-        setOnMouseDragged(event -> {
-            if (event.isSecondaryButtonDown()) {
-                if (!isDragging) return;
-                event.consume();
-                
-                double dx = event.getX() - viewportWidth - dragStartX;
-                double dy = event.getY() - viewportHeight - dragStartY;
-                
-                offsetX = dragStartOffsetX + dx;
-                offsetY = dragStartOffsetY + dy;
-                
-                clampAndPublish();
-            }
-        });
-
-        setOnMouseReleased(event -> {
-            if (event.isSecondaryButtonDown()) {
-                isDragging = false;
-                event.consume();
-            }
-        });
+        bus.subscribe(post.camera.Scrolled.class, e -> cameraScrolled(e.event()));
+        bus.subscribe(post.camera.Pressed.class, e -> cameraPressed(e.event()));
+        bus.subscribe(post.camera.Dragged.class, e->cameraDragged(e.event()));
+        bus.subscribe(post.camera.Released.class, e->cameraReleased(e.event()));
+        addEventFilter(ScrollEvent.ANY, this::cameraScrolled);
+        addEventFilter(MouseEvent.MOUSE_PRESSED, this::cameraPressed);
+        addEventFilter(MouseEvent.MOUSE_DRAGGED, this::cameraDragged);
+        addEventFilter(MouseEvent.MOUSE_RELEASED, this::cameraReleased);
     }
-
+    
+    private void cameraReleased(MouseEvent event) {
+        if (event.isSecondaryButtonDown()) {
+            isDragging = false;
+            event.consume();
+        }
+    }
+    
+    private void cameraDragged(MouseEvent event) {
+        if (event.isSecondaryButtonDown()) {
+            if (!isDragging) return;
+            event.consume();
+            
+            double dx = event.getX() - viewportWidth - dragStartX;
+            double dy = event.getY() - viewportHeight - dragStartY;
+            
+            offsetX = dragStartOffsetX + dx;
+            offsetY = dragStartOffsetY + dy;
+            
+            clampAndPublish();
+        }
+    }
+    
+    private void cameraPressed(MouseEvent event) {
+        if (event.isSecondaryButtonDown()) {
+            dragStartX = event.getX() - viewportWidth;
+            dragStartY = event.getY() - viewportHeight;
+            dragStartOffsetX = offsetX;
+            dragStartOffsetY = offsetY;
+            isDragging = true;
+            event.consume();
+        }
+    }
+    
+    private void cameraScrolled(ScrollEvent event) {
+        event.consume();
+        
+        double delta = event.getDeltaY() > 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+        double newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * delta));
+        if (newZoom == zoom) return; // 缩放无变化，不发送事件
+        // 以鼠标位置为中心缩放
+        double mouseX = event.getX() - 0.5 * viewportWidth;
+        double mouseY = event.getY() - 0.5 * viewportHeight;
+        
+        // 计算缩放前鼠标指向的地图坐标
+        double mapPointX = (mouseX - offsetX) / zoom;
+        double mapPointY = (mouseY - offsetY) / zoom;
+        // 更新缩放
+        zoom = newZoom;
+        
+        // 缩放后，让同一地图坐标仍在鼠标位置下
+        offsetX = -mapPointX * zoom + mouseX;
+        offsetY = -mapPointY * zoom + mouseY;
+        
+        clampAndPublish();
+    }
+    
     /**
      * 约束偏移量到合法范围，并在状态有变化时发布事件
      */
