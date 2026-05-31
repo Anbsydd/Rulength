@@ -16,11 +16,11 @@ public class Move extends StackPane {
     private void initPlayer() {
         // 创建Player实例
         player = new Player();
-        player.name = "Player1";
+        player.setName("Player1");
 
         // 将玩家视图添加到Move层
         this.getChildren().add(player);
-        player.load();
+        player.onLoad();
     }
 
     public Player getPlayer() {

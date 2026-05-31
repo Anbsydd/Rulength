@@ -1,5 +1,7 @@
 package data;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
@@ -7,10 +9,16 @@ import javafx.scene.control.Button;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 
+import java.util.Scanner;
+
 public abstract class Slice extends Button implements LifeCycled, TextSized {
     protected boolean loaded=false;
+    
+    StringProperty name = new SimpleStringProperty("");
     public Slice() {
         super();
+        name.addListener((observable, oldValue, newValue) -> setText(newValue));
+        
     }
     
     @Override
@@ -43,4 +51,8 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
         addEventFilter(var1,var2);
         register(() -> removeEventFilter(var1,var2));
     }
+    public void setName(String name) {
+        this.name.set(name);
+    }
+    
 }
