@@ -57,9 +57,9 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
     }
     
     private void released(MouseEvent e) {
-        // 保存最终的地图坐标
-        mapX = Camera.traToMapX(getTranslateX());
-        mapY = Camera.traToMapY(getTranslateY());
+        // 保存最终的地图坐标（Slice的translateX/Y就是Move局部坐标=地图坐标）
+        mapX = getTranslateX();
+        mapY = getTranslateY();
         isDragging = false;
     }
     
@@ -71,12 +71,12 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
         double currentMapY = Camera.traToMapY(e.getSceneY());
         
         // 计算地图空间中的拖动距离
-        double deltaX = (currentMapX - dragStartMapX)/Camera.zoom;
-        double deltaY = (currentMapY - dragStartMapY)/Camera.zoom;
+        double deltaX = currentMapX - dragStartMapX;
+        double deltaY = currentMapY - dragStartMapY;
         
-        // 更新位置：新地图坐标 → 屏幕坐标
-        setTranslateX(Camera.mapToTraX(mapX + deltaX));
-        setTranslateY(Camera.mapToTraY(mapY + deltaY));
+        // 直接设置地图坐标（Slice的translateX/Y就是Move局部坐标=地图坐标）
+        setTranslateX(mapX + deltaX);
+        setTranslateY(mapY + deltaY);
     }
     
     private void pressed(MouseEvent e) {
