@@ -30,11 +30,25 @@ import static game.Game.bus;
 public class Camera extends StackPane {
     
     
-    // ---- 视窗状态（从配置注入初始值）----
+    // ---- 视窗状态（从配置注入初始值）----\
+    //地图对镜头的偏移量
     private double offsetX;
     private double offsetY;
     private double zoom;
-
+    //屏幕坐标转化为地图坐标
+    public double SceneToMapX(double SceneX){
+        return (SceneX-.5*viewportWidth-offsetX)/zoom;
+    }
+    public double SceneToMapY(double SceneY){
+        return (SceneY-.5*viewportHeight-offsetY)/zoom;
+    }
+    //地图坐标转化为屏幕坐标
+    public double MapToSceneX(double MapX){
+        return MapX*zoom+offsetX+.5*viewportWidth;
+    }
+    public double MapToSceneY(double MapY){
+        return MapY*zoom+offsetY+.5*viewportHeight;
+    }
     // ---- 缩放限制（从配置注入）----
     private double minZoom;
     private double maxZoom;
@@ -57,7 +71,6 @@ public class Camera extends StackPane {
         use(config);
         viewportWidth = width;
         viewportHeight = height;
-
         initCameraPane();
         initInputHandlers();
         initViewportListener();
@@ -76,8 +89,11 @@ public class Camera extends StackPane {
         setPickOnBounds(true);
         // camera 尺寸始终等于窗口尺寸
         PaneSizeManager.add(this, 1);
+        bus.subscribe(StageSizeChange.class, (StageSizeChange event) -> {
+            viewportWidth = event.width();
+            viewportHeight = event.height();
+        });
     }
-
     private void initViewportListener() {
         // 监听窗口大小变化，更新视口尺寸
         bus.subscribe(StageSizeChange.class, (StageSizeChange event) -> {
@@ -90,7 +106,6 @@ public class Camera extends StackPane {
             clampAndPublish();
         });
     }
-
     private void initInputHandlers() {
         bus.subscribe(post.camera.Scrolled.class, e -> cameraScrolled(e.event()));
         bus.subscribe(post.camera.Pressed.class, e -> cameraPressed(e.event()));
@@ -111,20 +126,25 @@ public class Camera extends StackPane {
     private void cameraDragged(MouseEvent event) {
         if (event.isSecondaryButtonDown()) {
             if (!isDragging) return;
-            double dx = event.getSceneX() - viewportWidth - dragStartX;
-            double dy = event.getSceneY() - viewportHeight - dragStartY;
+            double dx = event.getSceneX() - 0.5* viewportWidth - dragStartX;
+            double dy = event.getSceneY() - 0.5* viewportHeight - dragStartY;
             
             offsetX = dragStartOffsetX + dx;
             offsetY = dragStartOffsetY + dy;
-            
+            System.out.println(event.getSceneX());
+            System.out.println(SceneToMapX(event.getSceneX()));
             clampAndPublish();
         }
     }
     
     private void cameraPressed(MouseEvent event) {
+        
+        if (event.isPrimaryButtonDown()) {
+            System.out.println(SceneToMapX( event.getSceneX()));
+        }
         if (event.isSecondaryButtonDown()) {
-            dragStartX = event.getSceneX() - viewportWidth;
-            dragStartY = event.getSceneY() - viewportHeight;
+            dragStartX = event.getSceneX() -0.5*  viewportWidth;
+            dragStartY = event.getSceneY() - 0.5* viewportHeight;
             dragStartOffsetX = offsetX;
             dragStartOffsetY = offsetY;
             isDragging = true;
@@ -200,5 +220,5 @@ public class Camera extends StackPane {
     public double getZoom() {
         return zoom;
     }
-
+    
 }
