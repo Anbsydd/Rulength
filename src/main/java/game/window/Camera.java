@@ -105,17 +105,14 @@ public class Camera extends StackPane {
     private void cameraReleased(MouseEvent event) {
         if (event.isSecondaryButtonDown()) {
             isDragging = false;
-            event.consume();
         }
     }
     
     private void cameraDragged(MouseEvent event) {
         if (event.isSecondaryButtonDown()) {
             if (!isDragging) return;
-            event.consume();
-            
-            double dx = event.getX() - viewportWidth - dragStartX;
-            double dy = event.getY() - viewportHeight - dragStartY;
+            double dx = event.getSceneX() - viewportWidth - dragStartX;
+            double dy = event.getSceneY() - viewportHeight - dragStartY;
             
             offsetX = dragStartOffsetX + dx;
             offsetY = dragStartOffsetY + dy;
@@ -126,24 +123,21 @@ public class Camera extends StackPane {
     
     private void cameraPressed(MouseEvent event) {
         if (event.isSecondaryButtonDown()) {
-            dragStartX = event.getX() - viewportWidth;
-            dragStartY = event.getY() - viewportHeight;
+            dragStartX = event.getSceneX() - viewportWidth;
+            dragStartY = event.getSceneY() - viewportHeight;
             dragStartOffsetX = offsetX;
             dragStartOffsetY = offsetY;
             isDragging = true;
-            event.consume();
         }
     }
     
     private void cameraScrolled(ScrollEvent event) {
-        event.consume();
-        
         double delta = event.getDeltaY() > 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
         double newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * delta));
         if (newZoom == zoom) return; // 缩放无变化，不发送事件
         // 以鼠标位置为中心缩放
-        double mouseX = event.getX() - 0.5 * viewportWidth;
-        double mouseY = event.getY() - 0.5 * viewportHeight;
+        double mouseX = event.getSceneX() - 0.5 * viewportWidth;
+        double mouseY = event.getSceneY() - 0.5 * viewportHeight;
         
         // 计算缩放前鼠标指向的地图坐标
         double mapPointX = (mouseX - offsetX) / zoom;

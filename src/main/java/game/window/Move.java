@@ -20,6 +20,7 @@ public class Move extends StackPane {
 
         // 将玩家视图添加到Move层
         this.getChildren().add(player);
+        player.load();
     }
 
     public Player getPlayer() {
