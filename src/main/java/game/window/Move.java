@@ -2,8 +2,6 @@ package game.window;
 
 import game.slice.Player;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 
 public class Move extends StackPane {
     private Player player;

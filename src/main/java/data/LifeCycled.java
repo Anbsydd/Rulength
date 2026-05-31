@@ -1,10 +1,5 @@
 package data;
 
-import javafx.event.Event;
-import javafx.event.EventHandler;
-import javafx.event.EventType;
-import javafx.scene.input.ScrollEvent;
-
 import java.util.ArrayList;
 import java.util.List;
 
