@@ -57,35 +57,32 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
     }
     
     private void released(MouseEvent e) {
+        // 保存最终的地图坐标
         mapX = Camera.traToMapX(getTranslateX());
         mapY = Camera.traToMapY(getTranslateY());
-        System.out.println(mapX);
         isDragging = false;
     }
     
     private void dragged(MouseEvent e) {
         if (!isDragging) return;
         
-        // 获取当前鼠标对应地图位置
-        double currentMapX =e.getSceneX();
-        double currentMapY =e.getSceneY();
+        // 将当前鼠标屏幕坐标转换为地图坐标
+        double currentMapX = Camera.traToMapX(e.getSceneX());
+        double currentMapY = Camera.traToMapY(e.getSceneY());
         
-        // 计算拖动距离
-        double deltaX = (currentMapX - dragStartMapX)/ Camera.zoom;
-        double deltaY = (currentMapY - dragStartMapY)/ Camera.zoom;
+        // 计算地图空间中的拖动距离
+        double deltaX = (currentMapX - dragStartMapX)/Camera.zoom;
+        double deltaY = (currentMapY - dragStartMapY)/Camera.zoom;
         
-        // 更新位置
-        setTranslateX(game.window.Camera.mapToTraX(mapX + deltaX));
-        setTranslateY(game.window.Camera.mapToTraY(mapY + deltaY));
-//        System.out.println("mapX:"+mapX);
-//        System.out.println("deltaX:"+deltaX);
-//        System.out.println("trax:"+getTranslateX());
+        // 更新位置：新地图坐标 → 屏幕坐标
+        setTranslateX(Camera.mapToTraX(mapX + deltaX));
+        setTranslateY(Camera.mapToTraY(mapY + deltaY));
     }
     
     private void pressed(MouseEvent e) {
         isDragging = true;
-        dragStartMapX = e.getSceneX();
-        dragStartMapY = e.getSceneY();
+        dragStartMapX = Camera.traToMapX(e.getSceneX());
+        dragStartMapY = Camera.traToMapY(e.getSceneY());
     }
     
     @Override
