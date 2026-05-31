@@ -30,7 +30,10 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
     protected void addFilters() {
         EventHandler<ScrollEvent> scrolled = e -> game.Game.bus.publish(new post.camera.Scrolled(e));
         EventHandler<MouseEvent> pressed = e ->   game.Game.bus.publish(new post.camera.Pressed(e));
-        EventHandler<MouseEvent> dragged = e -> game.Game.bus.publish(new post.camera.Dragged(e));
+        EventHandler<MouseEvent> dragged = e -> {
+            if (e.isPrimaryButtonDown()) dragged();
+            if (e.isSecondaryButtonDown()) game.Game.bus.publish(new post.camera.Dragged(e));
+        };
         EventHandler<MouseEvent> released = e -> game.Game.bus.publish(new post.camera.Released(e));
 //        addAndRegisterEventFilter(MouseEvent.MOUSE_ENTERED, enter);
 //        addAndRegisterEventFilter(MouseEvent.MOUSE_EXITED, exit);
@@ -39,6 +42,11 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
         addAndRegisterEventFilter(MouseEvent.MOUSE_DRAGGED,dragged);
         addAndRegisterEventFilter(MouseEvent.MOUSE_RELEASED,released);
     }
+    
+    private void dragged() {
+    
+    }
+    
     @Override
     public void unload() {
         if (!loaded) return;

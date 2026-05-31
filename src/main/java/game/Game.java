@@ -5,7 +5,6 @@ import config.ConfigLoader;
 import game.window.Camera;
 import game.window.Move;
 import game.window.Stage;
-import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import post.EventBus;
@@ -13,8 +12,6 @@ import post.ui.MapTransformEvent;
 import post.ui.StageSizeChange;
 import util.ImageManager;
 import util.PaneSizeManager;
-
-import java.util.Scanner;
 import java.util.concurrent.*;
 
 public class Game {
