@@ -1,6 +1,7 @@
 package game.window;
 
 import config.CameraConfig;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
@@ -32,23 +33,9 @@ public class Camera extends StackPane {
     
     // ---- 视窗状态（从配置注入初始值）----\
     //地图对镜头的偏移量
-    private double offsetX;
-    private double offsetY;
-    private double zoom;
-    //屏幕坐标转化为地图坐标
-    public double SceneToMapX(double SceneX){
-        return (SceneX-.5*viewportWidth-offsetX)/zoom;
-    }
-    public double SceneToMapY(double SceneY){
-        return (SceneY-.5*viewportHeight-offsetY)/zoom;
-    }
-    //地图坐标转化为屏幕坐标
-    public double MapToSceneX(double MapX){
-        return MapX*zoom+offsetX+.5*viewportWidth;
-    }
-    public double MapToSceneY(double MapY){
-        return MapY*zoom+offsetY+.5*viewportHeight;
-    }
+    public static double offsetX;
+    public static double offsetY;
+    public static double zoom;
     // ---- 缩放限制（从配置注入）----
     private double minZoom;
     private double maxZoom;
@@ -77,9 +64,9 @@ public class Camera extends StackPane {
     }
     public void use(CameraConfig config){
         // ---- 配置 ----
-        this.offsetX = config.offsetX;
-        this.offsetY = config.offsetY;
-        this.zoom = config.zoom;
+        offsetX = config.offsetX;
+        offsetY = config.offsetY;
+        zoom = config.zoom;
         this.minZoom = config.minZoom;
         this.maxZoom = config.maxZoom;
         this.ZOOM_STEP = config.ZOOM_STEP;
@@ -118,31 +105,25 @@ public class Camera extends StackPane {
     }
     
     private void cameraReleased(MouseEvent event) {
-        if (event.isSecondaryButtonDown()) {
+        if (event.getButton() == MouseButton.SECONDARY) {
             isDragging = false;
         }
     }
     
     private void cameraDragged(MouseEvent event) {
-        if (event.isSecondaryButtonDown()) {
+        if (event.getButton() == MouseButton.SECONDARY) {
             if (!isDragging) return;
             double dx = event.getSceneX() - 0.5* viewportWidth - dragStartX;
             double dy = event.getSceneY() - 0.5* viewportHeight - dragStartY;
             
             offsetX = dragStartOffsetX + dx;
             offsetY = dragStartOffsetY + dy;
-            System.out.println(event.getSceneX());
-            System.out.println(SceneToMapX(event.getSceneX()));
             clampAndPublish();
         }
     }
     
     private void cameraPressed(MouseEvent event) {
-        
-        if (event.isPrimaryButtonDown()) {
-            System.out.println(SceneToMapX( event.getSceneX()));
-        }
-        if (event.isSecondaryButtonDown()) {
+        if (event.getButton() == MouseButton.SECONDARY) {
             dragStartX = event.getSceneX() -0.5*  viewportWidth;
             dragStartY = event.getSceneY() - 0.5* viewportHeight;
             dragStartOffsetX = offsetX;
@@ -207,18 +188,19 @@ public class Camera extends StackPane {
         double limitHeight = 0.5*viewportHeight *(zoom-1);
         return Math.max(-limitHeight, Math.min(limitHeight, oy));
     }
-
-
-    public double getOffsetX() {
-        return offsetX;
-    }
-
-    public double getOffsetY() {
-        return offsetY;
-    }
-
-    public double getZoom() {
-        return zoom;
-    }
     
+    //屏幕坐标转化为地图坐标
+    public static double traToMapX(double SceneX){
+        return (SceneX-offsetX)/zoom;
+    }
+    public static double traToMapY(double SceneY){
+        return (SceneY-offsetY)/zoom;
+    }
+    //地图坐标转化为屏幕坐标
+    public static double mapToTraX(double MapX){
+        return MapX*zoom+offsetX;
+    }
+    public static double mapToTraY(double MapY){
+        return MapY*zoom+offsetY;
+    }
 }

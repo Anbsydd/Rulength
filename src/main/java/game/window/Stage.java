@@ -12,13 +12,13 @@ public class Stage {
 
     private final javafx.stage.Stage javafxStage;
     private final StackPane root;
-    private final Scene scene;
+    private static Scene scene;
     private final Game game;
 
     public Stage(javafx.stage.Stage javafxStage) throws Exception {
         this.javafxStage = javafxStage;
         this.root = new StackPane();
-        this.scene = new Scene(root);
+        scene = new Scene(root);
 
         StageConfig config = ConfigLoader.loadConfig(CONFIG_PATH, StageConfig.class);
         javafxStage.setWidth(config.width);
@@ -38,7 +38,7 @@ public class Stage {
         return root;
     }
 
-    public Scene getScene() {
+    public static Scene getScene() {
         return scene;
     }
 

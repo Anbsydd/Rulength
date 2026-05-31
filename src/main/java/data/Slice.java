@@ -1,27 +1,31 @@
 package data;
 
+import game.window.Camera;
+import game.window.Stage;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.scene.control.Button;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 
 public abstract class Slice extends Button implements LifeCycled, TextSized {
     protected boolean loaded=false;
     // 拖动相关字段
-    private double dragStartX;
-    private double dragStartY;
-    private double initialTranslateX;
-    private double initialTranslateY;
+    private double dragStartMapX;
+    private double dragStartMapY;
+    private double mapX;
+    private double mapY;
     boolean isDragging = false;
     StringProperty name = new SimpleStringProperty("");
-    public Slice() {
+    public Slice(double X, double Y) {
         super();
         name.addListener((observable, oldValue, newValue) -> setText(newValue));
-        
+        mapX = X;
+        mapY = Y;
     }
     
     @Override
@@ -33,16 +37,16 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
     protected void addFilters() {
         EventHandler<ScrollEvent> scrolled = e -> game.Game.bus.publish(new post.camera.Scrolled(e));
         EventHandler<MouseEvent> pressed = e ->  {
-            if (e.isPrimaryButtonDown()) pressed(e);
-            if (e.isSecondaryButtonDown()) game.Game.bus.publish(new post.camera.Pressed(e));
+            if (e.getButton() == MouseButton.PRIMARY  ) pressed(e);
+            if (e.getButton() == MouseButton.SECONDARY) game.Game.bus.publish(new post.camera.Pressed(e));
         };
         EventHandler<MouseEvent> dragged = e -> {
-            if (e.isPrimaryButtonDown()) dragged(e);
-            if (e.isSecondaryButtonDown()) game.Game.bus.publish(new post.camera.Dragged(e));
+            if (e.getButton() == MouseButton.PRIMARY  ) dragged(e);
+            if (e.getButton() == MouseButton.SECONDARY) game.Game.bus.publish(new post.camera.Dragged(e));
         };
         EventHandler<MouseEvent> released = e -> {
-            if (e.isPrimaryButtonDown()) isDragging = false;
-            if (e.isSecondaryButtonDown()) game.Game.bus.publish(new post.camera.Released(e));
+            if (e.getButton() == MouseButton.PRIMARY  ) released(e);
+            if (e.getButton() == MouseButton.SECONDARY) game.Game.bus.publish(new post.camera.Released(e));
         };
 //        addAndRegisterEventFilter(MouseEvent.MOUSE_ENTERED, enter);
 //        addAndRegisterEventFilter(MouseEvent.MOUSE_EXITED, exit);
@@ -52,30 +56,36 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
         addAndRegisterEventFilter(MouseEvent.MOUSE_RELEASED,released);
     }
     
+    private void released(MouseEvent e) {
+        mapX = Camera.traToMapX(getTranslateX());
+        mapY = Camera.traToMapY(getTranslateY());
+        System.out.println(mapX);
+        isDragging = false;
+    }
+    
     private void dragged(MouseEvent e) {
         if (!isDragging) return;
         
-        // 获取当前鼠标位置
-        double currentX = e.getSceneX();
-        double currentY = getScene().getWindow().getY() + getScene().getY() + getLocalToSceneTransform().getTy();
+        // 获取当前鼠标对应地图位置
+        double currentMapX =e.getSceneX();
+        double currentMapY =e.getSceneY();
         
         // 计算拖动距离
-        double deltaX = currentX - dragStartX;
-        double deltaY = currentY - dragStartY;
+        double deltaX = (currentMapX - dragStartMapX)/ Camera.zoom;
+        double deltaY = (currentMapY - dragStartMapY)/ Camera.zoom;
         
         // 更新位置
-        setTranslateX(initialTranslateX + deltaX);
-        setTranslateY(initialTranslateY + deltaY);
+        setTranslateX(game.window.Camera.mapToTraX(mapX + deltaX));
+        setTranslateY(game.window.Camera.mapToTraY(mapY + deltaY));
+//        System.out.println("mapX:"+mapX);
+//        System.out.println("deltaX:"+deltaX);
+//        System.out.println("trax:"+getTranslateX());
     }
     
     private void pressed(MouseEvent e) {
-        if (e.isPrimaryButtonDown()) {
-            isDragging = true;
-            dragStartX = e.getSceneX();
-            dragStartY = e.getSceneY();
-            initialTranslateX = getTranslateX();
-            initialTranslateY = getTranslateY();
-        }
+        isDragging = true;
+        dragStartMapX = e.getSceneX();
+        dragStartMapY = e.getSceneY();
     }
     
     @Override
