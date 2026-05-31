@@ -2,6 +2,8 @@ package data;
 
 import game.window.Camera;
 import game.window.Stage;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.event.Event;
@@ -17,15 +19,21 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
     // 拖动相关字段
     private double dragStartMapX;
     private double dragStartMapY;
-    private double mapX;
-    private double mapY;
+    private DoubleProperty mapX;
+    private DoubleProperty mapY;
     boolean isDragging = false;
     StringProperty name = new SimpleStringProperty("");
     public Slice(double X, double Y) {
         super();
         name.addListener((observable, oldValue, newValue) -> setText(newValue));
-        mapX = X;
-        mapY = Y;
+        mapX = new SimpleDoubleProperty(X);
+        mapY = new SimpleDoubleProperty(Y);
+        mapX.addListener((observable, oldValue, newValue) ->
+                setTranslateX(newValue.doubleValue())
+        );
+        mapY.addListener((observable, oldValue, newValue) ->
+                setTranslateY(newValue.doubleValue())
+        );
     }
     
     @Override
@@ -58,8 +66,8 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
     
     private void released(MouseEvent e) {
         // 保存最终的地图坐标（Slice的translateX/Y就是Move局部坐标=地图坐标）
-        mapX = getTranslateX();
-        mapY = getTranslateY();
+        setMapX(getTranslateX());
+        setMapY(getTranslateY());
         isDragging = false;
     }
     
@@ -75,8 +83,8 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
         double deltaY = currentMapY - dragStartMapY;
         
         // 直接设置地图坐标（Slice的translateX/Y就是Move局部坐标=地图坐标）
-        setTranslateX(mapX + deltaX);
-        setTranslateY(mapY + deltaY);
+        setTranslateX(mapX.get() + deltaX);
+        setTranslateY(mapY.get() + deltaY);
     }
     
     private void pressed(MouseEvent e) {
@@ -99,6 +107,14 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
     }
     public void setName(String name) {
         this.name.set(name);
+    }
+    
+    public void setMapX(double mapX) {
+        this.mapX.set(mapX);
+    }
+    
+    public void setMapY(double mapY) {
+        this.mapY.set(mapY);
     }
     
 }

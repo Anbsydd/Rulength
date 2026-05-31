@@ -2,8 +2,8 @@ package game;
 
 import config.CameraConfig;
 import config.ConfigLoader;
+import game.slice.Player;
 import game.window.Camera;
-import game.window.Move;
 import game.window.Stage;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
@@ -21,9 +21,11 @@ public class Game {
     StackPane startMenu;
     StackPane map;
     Camera camera;
-    Move move;
+    StackPane static1;
+    StackPane move;
     public static ExecutorService mainPool;
-
+    private Player player;
+    private Player player1;
 
     // Camera 配置文件路径
     private static final String CAMERA_CONFIG_PATH = "assets/cameraConfig.json";
@@ -37,21 +39,42 @@ public class Game {
 //        root.getChildren().add(startMenu);
         initMap();
         initCamera();
+        initStatic();
         initMove();
         // 先添加 map（底层），再添加 camera（顶层，拦截输入）
         root.getChildren().add(map);
         root.getChildren().add(camera);
+        root.getChildren().add(static1);
         root.getChildren().add(move);
     }
     
+    private void initStatic() {
+        static1 = new StackPane();
+        PaneSizeManager.add(static1, 1);
+        PaneSizeManager.set(static1, root.getWidth(), root.getHeight());
+        static1.setPickOnBounds(false);
+        setStackPaneTransformByEvent(static1);
+        initPlayer();
+        static1.getChildren().add(player);
+    }
     private void initMove() {
-        move = new Move();
-        PaneSizeManager.add(move,1);
+        move = new StackPane();
+        PaneSizeManager.add(move, 1);
         PaneSizeManager.set(move, root.getWidth(), root.getHeight());
         move.setPickOnBounds(false);
-//        move.setMouseTransparent(true);
-        setStackPaneTransformByEvent(move);
-        
+        initPlayer();
+        // 创建Player实例
+        player1 = new Player();
+        player1.setName("Player2");
+        player1.onLoad();
+        move.getChildren().add(player);
+    }
+    
+    private void initPlayer() {
+        // 创建Player实例
+        player = new Player();
+        player.setName("Player1");
+        player.onLoad();
     }
     
     
