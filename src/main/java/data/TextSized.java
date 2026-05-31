@@ -1,4 +1,4 @@
-package game.slice;
+package data;
 import javafx.scene.control.Labeled;
 
 public interface TextSized{

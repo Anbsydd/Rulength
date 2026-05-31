@@ -3,6 +3,7 @@ package game;
 import config.CameraConfig;
 import config.ConfigLoader;
 import game.window.Camera;
+import game.window.Move;
 import game.window.Stage;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
@@ -21,6 +22,7 @@ public class Game {
     StackPane startMenu;
     StackPane map;
     Camera camera;
+    Move move;
     public static ExecutorService mainPool;
 
 
@@ -36,9 +38,21 @@ public class Game {
 //        root.getChildren().add(startMenu);
         initMap();
         initCamera();
+        initMove();
         // 先添加 map（底层），再添加 camera（顶层，拦截输入）
         root.getChildren().add(map);
         root.getChildren().add(camera);
+        root.getChildren().add(move);
+    }
+    
+    private void initMove() {
+        move = new Move();
+        PaneSizeManager.add(move,1);
+        PaneSizeManager.set(move, root.getWidth(), root.getHeight());
+        move.setPickOnBounds(false);
+//        move.setMouseTransparent(true);
+        setStackPaneTransformByEvent(move);
+        
     }
     
     
@@ -74,13 +88,7 @@ public class Game {
         bgView.fitHeightProperty().bind(map.heightProperty());
         map.getChildren().add(bgView);
 
-        // 订阅 MapTransformEvent，应用平移和缩放
-        bus.subscribe(MapTransformEvent.class, (MapTransformEvent event) -> {
-            map.setTranslateX(event.offsetX());
-            map.setTranslateY(event.offsetY());
-            map.setScaleX(event.zoom());
-            map.setScaleY(event.zoom());
-        });
+        setStackPaneTransformByEvent(map);
     }
 
     private void initCamera() throws Exception {
@@ -89,6 +97,15 @@ public class Game {
     }
     private void sendRootSizeChangedEvent(double width, double height) {
         bus.publish(new StageSizeChange(width, height));
+    }
+    // 订阅 MapTransformEvent，应用平移和缩放
+    private void setStackPaneTransformByEvent(StackPane pane) {
+        bus.subscribe(MapTransformEvent.class, (MapTransformEvent event) -> {
+            pane.setTranslateX(event.offsetX());
+            pane.setTranslateY(event.offsetY());
+            pane.setScaleX(event.zoom());
+            pane.setScaleY(event.zoom());
+        });
     }
     public Stage getStage() {
         return stage;

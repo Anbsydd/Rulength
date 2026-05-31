@@ -1,8 +1,7 @@
-package game.slice;
+package data;
 
-import data.LifeCycled;
 import javafx.scene.control.Button;
-public class Slice extends Button implements LifeCycled, TextSized {
+public abstract class Slice extends Button implements LifeCycled, TextSized {
     protected boolean loaded=false;
     public Slice() {
         super();

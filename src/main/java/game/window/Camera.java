@@ -103,14 +103,14 @@ public class Camera extends StackPane {
             double mouseY = event.getY()-0.5*viewportHeight;
 
             // 计算缩放前鼠标指向的地图坐标
-            double mapPointX = (mouseX + offsetX) / zoom;
-            double mapPointY = (mouseY + offsetY) / zoom;
+            double mapPointX = (mouseX - offsetX) / zoom;
+            double mapPointY = (mouseY - offsetY) / zoom;
             // 更新缩放
             zoom = newZoom;
 
             // 缩放后，让同一地图坐标仍在鼠标位置下
-            offsetX = mapPointX * zoom - mouseX;
-            offsetY = mapPointY * zoom - mouseY;
+            offsetX = -mapPointX * zoom + mouseX;
+            offsetY = -mapPointY * zoom + mouseY;
 
             clampAndPublish();
         });
