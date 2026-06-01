@@ -14,7 +14,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 
-public abstract class Slice extends Button implements LifeCycled, TextSized {
+public abstract class Slice extends Button implements LifeCycled, TextSized ,CanBeTranslated {
     protected boolean loaded=false;
     // 拖动相关字段
     private double dragStartMapX;
@@ -23,17 +23,21 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
     private DoubleProperty mapY;
     boolean isDragging = false;
     StringProperty name = new SimpleStringProperty("");
-    public Slice(double X, double Y) {
+    public Slice() {
         super();
+        mapX = new SimpleDoubleProperty(0);
+        mapY = new SimpleDoubleProperty(0);
         name.addListener((observable, oldValue, newValue) -> setText(newValue));
-        mapX = new SimpleDoubleProperty(X);
-        mapY = new SimpleDoubleProperty(Y);
         mapX.addListener((observable, oldValue, newValue) ->
                 setTranslateX(newValue.doubleValue())
         );
         mapY.addListener((observable, oldValue, newValue) ->
                 setTranslateY(newValue.doubleValue())
         );
+    }
+    public Slice(double X, double Y) {
+        this();
+        setLocation(X,Y);
     }
     
     @Override
@@ -116,5 +120,9 @@ public abstract class Slice extends Button implements LifeCycled, TextSized {
     public void setMapY(double mapY) {
         this.mapY.set(mapY);
     }
-    
+    public void setLocation(double x, double y) {
+        setMapX(x);
+        setMapY(y);
+    }
+
 }

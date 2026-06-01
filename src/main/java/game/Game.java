@@ -25,8 +25,6 @@ public class Game {
     StackPane move;
     public static ExecutorService mainPool;
     private Player player;
-    private Player player1;
-
     // Camera 配置文件路径
     private static final String CAMERA_CONFIG_PATH = "assets/cameraConfig.json";
 
@@ -54,7 +52,10 @@ public class Game {
         PaneSizeManager.set(static1, root.getWidth(), root.getHeight());
         static1.setPickOnBounds(false);
         setStackPaneTransformByEvent(static1);
-        initPlayer();
+        // 创建Player实例
+        player = new Player();
+        player.setName("Player1");
+        player.onLoad();
         static1.getChildren().add(player);
     }
     private void initMove() {
@@ -62,20 +63,13 @@ public class Game {
         PaneSizeManager.add(move, 1);
         PaneSizeManager.set(move, root.getWidth(), root.getHeight());
         move.setPickOnBounds(false);
-        initPlayer();
         // 创建Player实例
-        player1 = new Player();
-        player1.setName("Player2");
-        player1.onLoad();
+        player = new Player();
+        player.setName("Player2");
+        player.onLoad();
         move.getChildren().add(player);
     }
     
-    private void initPlayer() {
-        // 创建Player实例
-        player = new Player();
-        player.setName("Player1");
-        player.onLoad();
-    }
     
     
     private void initRoot() {
