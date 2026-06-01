@@ -3,6 +3,7 @@ package data;
 public class StaticSlice extends Slice{
 
     public StaticSlice() {
+        super();
     }
     public StaticSlice(double x, double y) {
         super(x, y);

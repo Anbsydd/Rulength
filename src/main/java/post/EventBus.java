@@ -68,8 +68,7 @@ public class EventBus {
             
             for (Consumer<?> c : list) {
                 Consumer<T> handler = (Consumer<T>) c;
-                if (handler instanceof SafeListener) {
-                    SafeListener<T> sl = (SafeListener<T>) handler;
+                if (handler instanceof SafeListener<T> sl) {
                     if (!sl.active) continue;
                     if (async) Game.mainPool.submit(() -> sl.listener.accept(event));
                     else try {

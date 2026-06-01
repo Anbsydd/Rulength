@@ -1,13 +1,23 @@
 package data;
 
 import game.window.Camera;
+import post.ui.MapTransformEvent;
 
-public abstract class MoveSlice extends Slice {
+public class MoveSlice extends Slice {
     
     public MoveSlice() {
+        super();
+        game.Game.bus.subscribe(MapTransformEvent.class, this::onMapTransform);
     }
+    
     public MoveSlice(double X, double Y) {
         super(X, Y);
+        game.Game.bus.subscribe(MapTransformEvent.class, this::onMapTransform);
+    }
+    
+    private void onMapTransform(MapTransformEvent mapTransformEvent) {
+        setTranslateX(mapToTraX(mapX.doubleValue()));
+        setTranslateY(mapToTraY(mapY.doubleValue()));
     }
     @Override
     public double traToMapX(double x){

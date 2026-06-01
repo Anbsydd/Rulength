@@ -2,7 +2,8 @@ package game;
 
 import config.CameraConfig;
 import config.ConfigLoader;
-import game.slice.Player;
+import data.MoveSlice;
+import data.StaticSlice;
 import game.window.Camera;
 import game.window.Stage;
 import javafx.scene.image.ImageView;
@@ -12,6 +13,7 @@ import post.ui.MapTransformEvent;
 import post.ui.StageSizeChange;
 import util.ImageManager;
 import util.PaneSizeManager;
+
 import java.util.concurrent.*;
 
 public class Game {
@@ -24,7 +26,6 @@ public class Game {
     StackPane static1;
     StackPane move;
     public static ExecutorService mainPool;
-    private Player player;
     // Camera 配置文件路径
     private static final String CAMERA_CONFIG_PATH = "assets/cameraConfig.json";
 
@@ -53,7 +54,7 @@ public class Game {
         static1.setPickOnBounds(false);
         setStackPaneTransformByEvent(static1);
         // 创建Player实例
-        player = new Player();
+        StaticSlice player = new StaticSlice();
         player.setName("Player1");
         player.onLoad();
         static1.getChildren().add(player);
@@ -64,7 +65,7 @@ public class Game {
         PaneSizeManager.set(move, root.getWidth(), root.getHeight());
         move.setPickOnBounds(false);
         // 创建Player实例
-        player = new Player();
+        MoveSlice player = new MoveSlice();
         player.setName("Player2");
         player.onLoad();
         move.getChildren().add(player);

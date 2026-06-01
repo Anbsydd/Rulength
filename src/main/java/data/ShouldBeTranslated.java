@@ -1,6 +1,6 @@
 package data;
 
-public interface CanBeTranslated {
+public interface ShouldBeTranslated {
     double traToMapX(double x);
     double traToMapY(double y);
     double mapToTraX(double x);

@@ -1,7 +1,6 @@
 package data;
 
 import game.window.Camera;
-import game.window.Stage;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -14,13 +13,13 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 
-public abstract class Slice extends Button implements LifeCycled, TextSized ,CanBeTranslated {
+public abstract class Slice extends Button implements LifeCycled, TextSized ,ShouldBeTranslated {
     protected boolean loaded=false;
     // 拖动相关字段
-    private double dragStartMapX;
-    private double dragStartMapY;
-    private DoubleProperty mapX;
-    private DoubleProperty mapY;
+    private double dragOffsetMapX;
+    private double dragOffsetMapY;
+    protected DoubleProperty mapX;
+    protected DoubleProperty mapY;
     boolean isDragging = false;
     StringProperty name = new SimpleStringProperty("");
     public Slice() {
@@ -29,10 +28,10 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Can
         mapY = new SimpleDoubleProperty(0);
         name.addListener((observable, oldValue, newValue) -> setText(newValue));
         mapX.addListener((observable, oldValue, newValue) ->
-                setTranslateX(newValue.doubleValue())
+                setTranslateX(mapToTraX(newValue.doubleValue()))
         );
         mapY.addListener((observable, oldValue, newValue) ->
-                setTranslateY(newValue.doubleValue())
+                setTranslateY(mapToTraY(newValue.doubleValue()))
         );
     }
     public Slice(double X, double Y) {
@@ -70,8 +69,8 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Can
     
     private void released(MouseEvent e) {
         // 保存最终的地图坐标（Slice的translateX/Y就是Move局部坐标=地图坐标）
-        setMapX(getTranslateX());
-        setMapY(getTranslateY());
+        setMapX(traToMapX(getTranslateX()));
+        setMapY(traToMapY(getTranslateY()));
         isDragging = false;
     }
     
@@ -82,19 +81,16 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Can
         double currentMapX = Camera.traToMapX(e.getSceneX());
         double currentMapY = Camera.traToMapY(e.getSceneY());
         
-        // 计算地图空间中的拖动距离
-        double deltaX = currentMapX - dragStartMapX;
-        double deltaY = currentMapY - dragStartMapY;
-        
-        // 直接设置地图坐标（Slice的translateX/Y就是Move局部坐标=地图坐标）
-        setTranslateX(mapX.get() + deltaX);
-        setTranslateY(mapY.get() + deltaY);
+        // 使用偏移量计算新位置，避免缩放后跳变
+        mapX.set(currentMapX - dragOffsetMapX);
+        mapY.set(currentMapY - dragOffsetMapY);
     }
     
     private void pressed(MouseEvent e) {
         isDragging = true;
-        dragStartMapX = Camera.traToMapX(e.getSceneX());
-        dragStartMapY = Camera.traToMapY(e.getSceneY());
+        // 记录鼠标地图坐标与Slice地图坐标之间的偏移量
+        dragOffsetMapX = Camera.traToMapX(e.getSceneX()) - mapX.get();
+        dragOffsetMapY = Camera.traToMapY(e.getSceneY()) - mapY.get();
     }
     
     @Override
