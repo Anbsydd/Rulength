@@ -7,7 +7,6 @@ package post.ui;
  *
  * @param offsetX  地图水平偏移（像素）
  * @param offsetY  地图垂直偏移（像素）
- * @param zoom     缩放倍率，1.0 = 原始大小
  */
-public record MapTransformEvent(double offsetX, double offsetY, double zoom) {
+public record MapDraggedEvent(double offsetX, double offsetY) {
 }

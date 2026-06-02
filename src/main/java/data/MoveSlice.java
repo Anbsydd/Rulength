@@ -1,21 +1,27 @@
 package data;
 
 import game.window.Camera;
-import post.ui.MapTransformEvent;
+import javafx.scene.input.MouseEvent;
+import post.ui.MapDraggedEvent;
+import post.ui.MapScrolledEvent;
 
 public class MoveSlice extends Slice {
     
     public MoveSlice() {
         super();
-        game.Game.bus.subscribe(MapTransformEvent.class, this::onMapTransform);
+        game.Game.bus.subscribe(MapDraggedEvent.class, this::onMapTransform);
+        game.Game.bus.subscribe(MapScrolledEvent.class, e->moveTo(mapToTraX(mapX.doubleValue()), mapToTraY(mapY.doubleValue())));
     }
     
     public MoveSlice(double X, double Y) {
         super(X, Y);
-        game.Game.bus.subscribe(MapTransformEvent.class, this::onMapTransform);
+        game.Game.bus.subscribe(MapDraggedEvent.class, this::onMapTransform);
+        game.Game.bus.subscribe(MapScrolledEvent.class, e->moveTo(mapToTraX(mapX.doubleValue()), mapToTraY(mapY.doubleValue())));
     }
     
-    private void onMapTransform(MapTransformEvent mapTransformEvent) {
+    
+    
+    private void onMapTransform(MapDraggedEvent m) {
         setTranslateX(mapToTraX(mapX.doubleValue()));
         setTranslateY(mapToTraY(mapY.doubleValue()));
     }

@@ -1,6 +1,7 @@
 package data;
 
-import game.window.Camera;
+import javafx.animation.ParallelTransition;
+import javafx.animation.TranslateTransition;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -12,27 +13,38 @@ import javafx.scene.control.Button;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.util.Duration;
+import post.ui.MapDraggedEvent;
+import post.ui.MapScrolledEvent;
+
+import static game.Game.bus;
+import static game.window.Camera.zoom;
 
 public abstract class Slice extends Button implements LifeCycled, TextSized ,ShouldBeTranslated {
     protected boolean loaded=false;
     // 拖动相关字段
-    private double dragOffsetMapX;
-    private double dragOffsetMapY;
+    protected double dragOffsetX;
+    protected double dragOffsetY;
     protected DoubleProperty mapX;
     protected DoubleProperty mapY;
     boolean isDragging = false;
     StringProperty name = new SimpleStringProperty("");
+    TranslateTransition t;
+    ParallelTransition p;
     public Slice() {
         super();
         mapX = new SimpleDoubleProperty(0);
         mapY = new SimpleDoubleProperty(0);
+        t = new TranslateTransition(Duration.millis(100),this);
+        p= new ParallelTransition(t);
         name.addListener((observable, oldValue, newValue) -> setText(newValue));
-        mapX.addListener((observable, oldValue, newValue) ->
-                setTranslateX(mapToTraX(newValue.doubleValue()))
-        );
-        mapY.addListener((observable, oldValue, newValue) ->
-                setTranslateY(mapToTraY(newValue.doubleValue()))
-        );
+        mapX.addListener((observable, oldValue, newValue) -> {
+            setTranslateX(mapToTraX(newValue.doubleValue()));
+        });
+        mapY.addListener((observable, oldValue, newValue) -> {
+            setTranslateY(mapToTraY(newValue.doubleValue()));
+        });
+        bus.subscribe(MapDraggedEvent.class, e-> p.stop());
     }
     public Slice(double X, double Y) {
         this();
@@ -46,18 +58,18 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         loaded=true;
     }
     protected void addFilters() {
-        EventHandler<ScrollEvent> scrolled = e -> game.Game.bus.publish(new post.camera.Scrolled(e));
+        EventHandler<ScrollEvent> scrolled = e -> bus.publish(new post.camera.Scrolled(e));
         EventHandler<MouseEvent> pressed = e ->  {
             if (e.getButton() == MouseButton.PRIMARY  ) pressed(e);
-            if (e.getButton() == MouseButton.SECONDARY) game.Game.bus.publish(new post.camera.Pressed(e));
+            if (e.getButton() == MouseButton.SECONDARY) bus.publish(new post.camera.Pressed(e));
         };
         EventHandler<MouseEvent> dragged = e -> {
             if (e.getButton() == MouseButton.PRIMARY  ) dragged(e);
-            if (e.getButton() == MouseButton.SECONDARY) game.Game.bus.publish(new post.camera.Dragged(e));
+            if (e.getButton() == MouseButton.SECONDARY) bus.publish(new post.camera.Dragged(e));
         };
         EventHandler<MouseEvent> released = e -> {
             if (e.getButton() == MouseButton.PRIMARY  ) released(e);
-            if (e.getButton() == MouseButton.SECONDARY) game.Game.bus.publish(new post.camera.Released(e));
+            if (e.getButton() == MouseButton.SECONDARY) bus.publish(new post.camera.Released(e));
         };
 //        addAndRegisterEventFilter(MouseEvent.MOUSE_ENTERED, enter);
 //        addAndRegisterEventFilter(MouseEvent.MOUSE_EXITED, exit);
@@ -67,32 +79,42 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         addAndRegisterEventFilter(MouseEvent.MOUSE_RELEASED,released);
     }
     
-    private void released(MouseEvent e) {
+    protected void pressed(MouseEvent e) {
+        isDragging = true;
+        // 记录鼠标地图坐标与Slice地图坐标之间的偏移量
+        recordXAY(e);
+        bus.subscribe(MapScrolledEvent.class, e1-> {
+            recordXAY(e);
+        });
+        System.out.println("pressT"+getTranslateX());
+        System.out.println("pressM"+mapX.get());
+    }
+    
+    private void recordXAY(MouseEvent e) {
+        dragOffsetX = (e.getSceneX() - getTranslateX());
+        dragOffsetY = (e.getSceneY() - getTranslateY());
+    }
+    
+    protected void released(MouseEvent e) {
         // 保存最终的地图坐标（Slice的translateX/Y就是Move局部坐标=地图坐标）
         setMapX(traToMapX(getTranslateX()));
         setMapY(traToMapY(getTranslateY()));
         isDragging = false;
+        System.out.println("releaseT"+getTranslateX());
+        System.out.println("releaseM"+mapX.get());
     }
     
-    private void dragged(MouseEvent e) {
+    protected void dragged(MouseEvent e) {
         if (!isDragging) return;
-        
-        // 将当前鼠标屏幕坐标转换为地图坐标
-        double currentMapX = Camera.traToMapX(e.getSceneX());
-        double currentMapY = Camera.traToMapY(e.getSceneY());
+        double currentX = e.getSceneX();
+        double currentY = e.getSceneY();
         
         // 使用偏移量计算新位置，避免缩放后跳变
-        mapX.set(currentMapX - dragOffsetMapX);
-        mapY.set(currentMapY - dragOffsetMapY);
+        mapX.set((currentX - dragOffsetX));
+        mapY.set((currentY - dragOffsetY));
+        System.out.println("dragT"+getTranslateX());
+        System.out.println("dragM"+mapX.get());
     }
-    
-    private void pressed(MouseEvent e) {
-        isDragging = true;
-        // 记录鼠标地图坐标与Slice地图坐标之间的偏移量
-        dragOffsetMapX = Camera.traToMapX(e.getSceneX()) - mapX.get();
-        dragOffsetMapY = Camera.traToMapY(e.getSceneY()) - mapY.get();
-    }
-    
     @Override
     public void unload() {
         if (!loaded) return;
@@ -120,5 +142,12 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         setMapX(x);
         setMapY(y);
     }
-
+    public ParallelTransition moveTo(double x,double y) {
+        p.stop();
+        t.setToX(x);
+        t.setToY(y);
+        p.play();
+        return p;
+    }
+    
 }

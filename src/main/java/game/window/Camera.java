@@ -5,7 +5,8 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
-import post.ui.MapTransformEvent;
+import post.ui.MapScrolledEvent;
+import post.ui.MapDraggedEvent;
 import post.ui.StageSizeChange;
 import util.PaneSizeManager;
 
@@ -150,7 +151,13 @@ public class Camera extends StackPane {
         offsetX = -mapPointX * zoom + mouseX;
         offsetY = -mapPointY * zoom + mouseY;
         
-        clampAndPublish();
+        clampAndPublish_Scrolled();
+    }
+    
+    private void clampAndPublish_Scrolled() {
+        offsetX = clampOffsetX(offsetX);
+        offsetY = clampOffsetY(offsetY);
+        bus.publish(new MapScrolledEvent(offsetX, offsetY, zoom));
     }
     
     /**
@@ -159,15 +166,9 @@ public class Camera extends StackPane {
     private void clampAndPublish() {
         offsetX = clampOffsetX(offsetX);
         offsetY = clampOffsetY(offsetY);
-        publishTransform();
+        bus.publish(new MapDraggedEvent(offsetX, offsetY));
     }
 
-    /**
-     * 发布当前视窗状态
-     */
-    private void publishTransform() {
-        bus.publish(new MapTransformEvent(offsetX, offsetY, zoom));
-    }
     // ---- 约束计算 ----
     
 

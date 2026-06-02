@@ -3,13 +3,16 @@ package game;
 import config.CameraConfig;
 import config.ConfigLoader;
 import data.MoveSlice;
+import data.PaneAnimation;
 import data.StaticSlice;
 import game.window.Camera;
 import game.window.Stage;
+import javafx.scene.Node;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import post.EventBus;
-import post.ui.MapTransformEvent;
+import post.ui.MapDraggedEvent;
+import post.ui.MapScrolledEvent;
 import post.ui.StageSizeChange;
 import util.ImageManager;
 import util.PaneSizeManager;
@@ -52,7 +55,7 @@ public class Game {
         PaneSizeManager.add(static1, 1);
         PaneSizeManager.set(static1, root.getWidth(), root.getHeight());
         static1.setPickOnBounds(false);
-        setStackPaneTransformByEvent(static1);
+        moveWithMap(static1);
         // 创建Player实例
         StaticSlice player = new StaticSlice();
         player.setName("Player1");
@@ -61,9 +64,9 @@ public class Game {
     }
     private void initMove() {
         move = new StackPane();
+        move.setPickOnBounds(false);
         PaneSizeManager.add(move, 1);
         PaneSizeManager.set(move, root.getWidth(), root.getHeight());
-        move.setPickOnBounds(false);
         // 创建Player实例
         MoveSlice player = new MoveSlice();
         player.setName("Player2");
@@ -75,12 +78,8 @@ public class Game {
     
     private void initRoot() {
         root = stage.getRoot();
-        root.heightProperty().addListener((obs, oldVal, newVal) -> {
-            sendRootSizeChangedEvent(root.getWidth(), newVal.doubleValue());
-        });
-        root.widthProperty().addListener((obs, oldVal, newVal) -> {
-            sendRootSizeChangedEvent(newVal.doubleValue(), root.getHeight());
-        });
+        root.heightProperty().addListener((obs, oldVal, newVal) -> sendRootSizeChangedEvent(root.getWidth(), newVal.doubleValue()));
+        root.widthProperty().addListener((obs, oldVal, newVal) -> sendRootSizeChangedEvent(newVal.doubleValue(), root.getHeight()));
     }
     private void initStartMenu() {
         startMenu = new StackPane();
@@ -104,8 +103,8 @@ public class Game {
         bgView.fitWidthProperty().bind(map.widthProperty());
         bgView.fitHeightProperty().bind(map.heightProperty());
         map.getChildren().add(bgView);
-
-        setStackPaneTransformByEvent(map);
+        moveWithMap(map);
+        
     }
 
     private void initCamera() throws Exception {
@@ -115,17 +114,17 @@ public class Game {
     private void sendRootSizeChangedEvent(double width, double height) {
         bus.publish(new StageSizeChange(width, height));
     }
-    // 订阅 MapTransformEvent，应用平移和缩放
-    private void setStackPaneTransformByEvent(StackPane pane) {
-        bus.subscribe(MapTransformEvent.class, (MapTransformEvent event) -> {
-            pane.setTranslateX(event.offsetX());
-            pane.setTranslateY(event.offsetY());
-            pane.setScaleX(event.zoom());
-            pane.setScaleY(event.zoom());
+    void moveWithMap(Node node){
+        PaneAnimation paneAnimation = new PaneAnimation(node);
+        bus.subscribe(MapDraggedEvent.class, (MapDraggedEvent event) -> {
+            node.setTranslateX(event.offsetX());
+            node.setTranslateY(event.offsetY());
+        });
+        bus.subscribe(MapScrolledEvent.class, (MapScrolledEvent event) -> {
+            paneAnimation.moveTo(event.offsetX(), event.offsetY(), event.zoom());
         });
     }
     public Stage getStage() {
         return stage;
     }
-    
 }

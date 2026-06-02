@@ -1,5 +1,9 @@
 package data;
 
+import game.window.Camera;
+import javafx.scene.input.MouseEvent;
+import post.ui.MapDraggedEvent;
+
 public class StaticSlice extends Slice{
 
     public StaticSlice() {
@@ -27,5 +31,10 @@ public class StaticSlice extends Slice{
     @Override
     public double mapToTraY(double y) {
         return y;
+    }
+    
+    private void onMapTransform(MapDraggedEvent m) {
+        setTranslateX(mapToTraX(mapX.doubleValue()));
+        setTranslateY(mapToTraY(mapY.doubleValue()));
     }
 }
