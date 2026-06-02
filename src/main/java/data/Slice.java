@@ -79,42 +79,15 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         addAndRegisterEventFilter(MouseEvent.MOUSE_RELEASED,released);
     }
     
-    protected void pressed(MouseEvent e) {
-        isDragging = true;
-        // 记录鼠标地图坐标与Slice地图坐标之间的偏移量
-        recordXAY(e);
-        bus.subscribe(MapScrolledEvent.class, e1-> {
-            recordXAY(e);
-        });
-        System.out.println("pressT"+getTranslateX());
-        System.out.println("pressM"+mapX.get());
-    }
+    abstract protected void pressed(MouseEvent e) ;
     
-    private void recordXAY(MouseEvent e) {
-        dragOffsetX = (e.getSceneX() - getTranslateX());
-        dragOffsetY = (e.getSceneY() - getTranslateY());
-    }
     
-    protected void released(MouseEvent e) {
-        // 保存最终的地图坐标（Slice的translateX/Y就是Move局部坐标=地图坐标）
-        setMapX(traToMapX(getTranslateX()));
-        setMapY(traToMapY(getTranslateY()));
-        isDragging = false;
-        System.out.println("releaseT"+getTranslateX());
-        System.out.println("releaseM"+mapX.get());
-    }
     
-    protected void dragged(MouseEvent e) {
-        if (!isDragging) return;
-        double currentX = e.getSceneX();
-        double currentY = e.getSceneY();
-        
-        // 使用偏移量计算新位置，避免缩放后跳变
-        mapX.set((currentX - dragOffsetX));
-        mapY.set((currentY - dragOffsetY));
-        System.out.println("dragT"+getTranslateX());
-        System.out.println("dragM"+mapX.get());
-    }
+    abstract protected void released(MouseEvent e) ;
+    
+    
+    abstract protected void dragged(MouseEvent e) ;
+    
     @Override
     public void unload() {
         if (!loaded) return;
