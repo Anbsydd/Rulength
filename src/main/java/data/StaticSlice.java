@@ -1,6 +1,5 @@
 package data;
 
-import game.window.Camera;
 import javafx.scene.input.MouseEvent;
 import post.ui.MapDraggedEvent;
 import post.ui.MapScrolledEvent;
@@ -36,13 +35,12 @@ public class StaticSlice extends Slice{
     }
     
     @Override
-    protected void released(MouseEvent e) {
+    protected void released() {
         
         // 保存最终的地图坐标（Slice的translateX/Y就是Move局部坐标=地图坐标）
         setMapX(getTranslateX());
         setMapY(getTranslateY());
         isDragging = false;
-        System.out.println("release:"+e.getSceneX());
     }
     
     @Override

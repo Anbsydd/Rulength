@@ -15,10 +15,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.util.Duration;
 import post.ui.MapDraggedEvent;
-import post.ui.MapScrolledEvent;
 
 import static game.Game.bus;
-import static game.window.Camera.zoom;
 
 public abstract class Slice extends Button implements LifeCycled, TextSized ,ShouldBeTranslated {
     protected boolean loaded=false;
@@ -68,7 +66,7 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
             if (e.getButton() == MouseButton.SECONDARY) bus.publish(new post.camera.Dragged(e));
         };
         EventHandler<MouseEvent> released = e -> {
-            if (e.getButton() == MouseButton.PRIMARY  ) released(e);
+            if (e.getButton() == MouseButton.PRIMARY  ) released();
             if (e.getButton() == MouseButton.SECONDARY) bus.publish(new post.camera.Released(e));
         };
 //        addAndRegisterEventFilter(MouseEvent.MOUSE_ENTERED, enter);
@@ -83,7 +81,7 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
     
     
     
-    abstract protected void released(MouseEvent e) ;
+    abstract protected void released() ;
     
     
     abstract protected void dragged(MouseEvent e) ;
