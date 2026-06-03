@@ -14,18 +14,17 @@ public class MoveSlice extends Slice {
     double lastMouseY;
     public MoveSlice() {
         super();
-//        bus.subscribe(MapDraggedEvent.class, this::onMapTransform);
+        bus.subscribe(MapDraggedEvent.class, this::onMapTransform);
         bus.subscribe(MapScrolledEvent.class, e->{
-            released();
             moveTo(mapToTraX(mapX.doubleValue()), mapToTraY(mapY.doubleValue()));
         });
     }
     
     public MoveSlice(double X, double Y) {
         super(X, Y);
-//        bus.subscribe(MapDraggedEvent.class, this::onMapTransform);
+        bus.subscribe(MapDraggedEvent.class, this::onMapTransform);
         bus.subscribe(MapScrolledEvent.class, e->{
-            released();
+            isDragging = false;
             moveTo(mapToTraX(mapX.doubleValue()), mapToTraY(mapY.doubleValue()));
         });
     }
@@ -57,8 +56,8 @@ public class MoveSlice extends Slice {
         double currentY = e.getSceneY();
         
         // 使用偏移量计算新位置，避免缩放后跳变
-        setTranslateX((currentX - lastMouseX)+lastTraX);
-        setTranslateY((currentY - lastMouseY)+lastTraY);
+        setMapX(traToMapX((currentX - lastMouseX)+lastTraX));
+        setMapY(traToMapY((currentY - lastMouseY)+lastTraY));
     }
     
     

@@ -15,6 +15,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.util.Duration;
 import post.ui.MapDraggedEvent;
+import post.ui.MapScrolledEvent;
 
 import static game.Game.bus;
 
@@ -42,7 +43,13 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         mapY.addListener((observable, oldValue, newValue) -> {
             setTranslateY(mapToTraY(newValue.doubleValue()));
         });
-        bus.subscribe(MapDraggedEvent.class, e-> p.stop());
+        bus.subscribe(MapDraggedEvent.class, e-> {
+            p.stop();
+            isDragging = false;
+        });
+        bus.subscribe(MapScrolledEvent.class, e-> {
+            isDragging = false;
+        });
     }
     public Slice(double X, double Y) {
         this();

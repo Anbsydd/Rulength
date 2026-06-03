@@ -13,9 +13,15 @@ public class StaticSlice extends Slice{
     double lastTraY;
     public StaticSlice() {
         super();
+        bus.subscribe(MapScrolledEvent.class, e-> {
+            released();
+        });
     }
     public StaticSlice(double x, double y) {
         super(x, y);
+        bus.subscribe(MapScrolledEvent.class, e-> {
+            released();
+        });
     }
     
     @Override
