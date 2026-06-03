@@ -5,8 +5,8 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
-import post.ui.MapScrolledEvent;
 import post.ui.MapDraggedEvent;
+import post.ui.MapScrolledEvent;
 import post.ui.StageSizeChange;
 import util.PaneSizeManager;
 

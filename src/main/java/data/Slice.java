@@ -16,20 +16,28 @@ import javafx.scene.input.ScrollEvent;
 import javafx.util.Duration;
 import post.ui.MapDraggedEvent;
 import post.ui.MapScrolledEvent;
+import post.ui.StageSizeChange;
 
 import static game.Game.bus;
 
 public abstract class Slice extends Button implements LifeCycled, TextSized ,ShouldBeTranslated {
     protected boolean loaded=false;
     // 拖动相关字段
-    protected double dragOffsetX;
-    protected double dragOffsetY;
+    protected double lastMouseX;
+    protected double lastMouseY;
+    protected double lastTraX;
+    protected double lastTraY;;
     protected DoubleProperty mapX;
     protected DoubleProperty mapY;
     boolean isDragging = false;
+    public boolean canBeDragged = true;
     StringProperty name = new SimpleStringProperty("");
     TranslateTransition t;
     ParallelTransition p;
+    abstract void finalTraToMapX(double traX);
+    abstract void finalTraToMapY(double traY);
+    abstract void finalMapToTraX(double mapX);
+    abstract void finalMapToTraY(double mapY);
     public Slice() {
         super();
         mapX = new SimpleDoubleProperty(0);
@@ -40,9 +48,7 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         mapX.addListener((observable, oldValue, newValue) -> {
             setTranslateX(mapToTraX(newValue.doubleValue()));
         });
-        mapY.addListener((observable, oldValue, newValue) -> {
-            setTranslateY(mapToTraY(newValue.doubleValue()));
-        });
+        mapY.addListener((observable, oldValue, newValue) -> setTranslateY(mapToTraY(newValue.doubleValue())));
         bus.subscribe(MapDraggedEvent.class, e-> {
             p.stop();
             isDragging = false;
@@ -50,7 +56,14 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         bus.subscribe(MapScrolledEvent.class, e-> {
             isDragging = false;
         });
+        
+        
+        bus.subscribe(StageSizeChange.class, e-> {
+            System.out.println("tra:"+getTranslateX()+" "+getTranslateY());
+            System.out.println("map:"+mapX.get()+" "+mapY.get());
+        });
     }
+    
     public Slice(double X, double Y) {
         this();
         setLocation(X,Y);
@@ -84,13 +97,21 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         addAndRegisterEventFilter(MouseEvent.MOUSE_RELEASED,released);
     }
     
-    abstract protected void pressed(MouseEvent e) ;
+    protected void pressed(MouseEvent e) {
+        isDragging = canBeDragged;
+        // 记录鼠标地图坐标与Slice地图坐标之间的偏移量
+        recordXAY(e);
+    }
     
     
-    
+    protected void recordXAY(MouseEvent e) {
+        lastMouseX = e.getSceneX();
+        lastMouseY = e.getSceneY();
+        lastTraX = getTranslateX();
+        lastTraY = getTranslateY();
+    }
+    ;
     abstract protected void released() ;
-    
-    
     abstract protected void dragged(MouseEvent e) ;
     
     @Override

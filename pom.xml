@@ -31,11 +31,6 @@
             <version>21.0.6</version>
         </dependency>
         <dependency>
-            <groupId>com.github.almasb</groupId>
-            <artifactId>fxgl</artifactId>
-            <version>21.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-swing</artifactId>
             <version>21.0.6</version>
