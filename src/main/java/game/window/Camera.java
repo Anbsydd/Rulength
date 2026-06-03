@@ -190,18 +190,4 @@ public class Camera extends StackPane {
         return Math.max(-limitHeight, Math.min(limitHeight, oy));
     }
     
-    //屏幕坐标转化为地图坐标
-    public static double traToMapX(double SceneX){
-        return (SceneX-offsetX)/zoom;
-    }
-    public static double traToMapY(double SceneY){
-        return (SceneY-offsetY)/zoom;
-    }
-    //地图坐标转化为屏幕坐标
-    public static double mapToTraX(double MapX){
-        return MapX*zoom+offsetX;
-    }
-    public static double mapToTraY(double MapY){
-        return MapY*zoom+offsetY;
-    }
 }

@@ -1,8 +1,8 @@
 package data;
 
 public interface ShouldBeTranslated {
-    double traToMapX(double x);
-    double traToMapY(double y);
-    double mapToTraX(double x);
-    double mapToTraY(double y);
+     double finalTraToMapX(double x);
+     double finalTraToMapY(double y);
+     double finalMapToTraX(double x);
+     double finalMapToTraY(double y);
 }

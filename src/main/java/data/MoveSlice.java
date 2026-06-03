@@ -4,87 +4,74 @@ import game.window.Camera;
 import javafx.scene.input.MouseEvent;
 import post.ui.MapDraggedEvent;
 import post.ui.MapScrolledEvent;
+import post.ui.StageSizeChange;
 
 import static game.Game.bus;
+import static game.window.Camera.zoom;
 
 public class MoveSlice extends Slice {
-    @Override
-    void finalTraToMapX(double traX) {
-    
-    }
-    
-    @Override
-    void finalTraToMapY(double traY) {
-    
-    }
-    
-    @Override
-    void finalMapToTraX(double mapX) {
-    
-    }
-    
-    @Override
-    void finalMapToTraY(double mapY) {
-    
-    }
-    
     public MoveSlice() {
         super();
         bus.subscribe(MapDraggedEvent.class, e->{
-            onMapTransform();
+            reloadTra();
         });
         bus.subscribe(MapScrolledEvent.class, e->{
-            moveTo(mapToTraX(mapX.doubleValue()), mapToTraY(mapY.doubleValue()));
+            moveTo(finalMapToTraX(mapX.doubleValue()), finalMapToTraY(mapY.doubleValue()));
+        });
+        bus.subscribe(StageSizeChange.class, e-> {
+            released();
+            setTranslateX(finalMapToTraX(mapX.doubleValue()));
+            setTranslateY(finalMapToTraY(mapY.doubleValue()));
         });
     }
     
     public MoveSlice(double X, double Y) {
         super(X, Y);
         bus.subscribe(MapDraggedEvent.class, e->{
-            onMapTransform();
+            reloadTra();
         });
         bus.subscribe(MapScrolledEvent.class, e->{
             isDragging = false;
-            moveTo(mapToTraX(mapX.doubleValue()), mapToTraY(mapY.doubleValue()));
+            moveTo(finalMapToTraX(mapX.doubleValue()), finalMapToTraY(mapY.doubleValue()));
+        });
+        bus.subscribe(StageSizeChange.class, e-> {
+            released();
+            setTranslateX(finalMapToTraX(mapX.doubleValue()));
+            setTranslateY(finalMapToTraY(mapY.doubleValue()));
         });
     }
-    protected void released() {
-        // 保存最终的地图坐标（Slice的translateX/Y就是Move局部坐标=地图坐标）
-        setMapX(traToMapX(getTranslateX()));
-        setMapY(traToMapY(getTranslateY()));
-        isDragging = false;
-    }
-    
     @Override
     protected void dragged(MouseEvent e) {
         if (!isDragging) return;
         double currentX = e.getSceneX();
         double currentY = e.getSceneY();
-        
         // 使用偏移量计算新位置，避免缩放后跳变
-        setMapX(traToMapX((currentX - lastMouseX)+lastTraX));
-        setMapY(traToMapY((currentY - lastMouseY)+lastTraY));
+        setMapX(finalTraToMapX((currentX - lastMouseX)+lastTraX));
+        setMapY(finalTraToMapY((currentY - lastMouseY)+lastTraY));
     }
     
     
-    private void onMapTransform() {
-        setTranslateX(mapToTraX(mapX.doubleValue()));
-        setTranslateY(mapToTraY(mapY.doubleValue()));
+    private void reloadTra() {
+        setTranslateX(finalMapToTraX(mapX.doubleValue()));
+        setTranslateY(finalMapToTraY(mapY.doubleValue()));
     }
     @Override
-    public double traToMapX(double x){
-        return Camera.traToMapX(x);
+    public double finalTraToMapX(double traX) {
+        return (traX-Camera.offsetX)/zoom/game.Game.multiX;
     }
+    
     @Override
-    public double traToMapY(double y){
-        return Camera.traToMapY(y);
+    public double finalTraToMapY(double traY) {
+        return (traY-Camera.offsetY)/zoom/game.Game.multiY;
     }
-    @Override
-    public double mapToTraX(double x){
-        return Camera.mapToTraX(x);
+    
+    @Override    // 重写父类的finalMapToTraX方法
+    public double finalMapToTraX(double mapX) {    // 将地图坐标X转换为轨迹坐标X，参数为地图坐标X，返回轨迹坐标X
+        return mapX*zoom*game.Game.multiX+Camera.offsetX;
     }
+    
     @Override
-    public double mapToTraY(double y){
-        return Camera.mapToTraY(y);
+    public double finalMapToTraY(double mapY) {
+        return mapY*zoom*game.Game.multiY+Camera.offsetY;
     }
 }

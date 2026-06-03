@@ -34,10 +34,10 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
     StringProperty name = new SimpleStringProperty("");
     TranslateTransition t;
     ParallelTransition p;
-    abstract void finalTraToMapX(double traX);
-    abstract void finalTraToMapY(double traY);
-    abstract void finalMapToTraX(double mapX);
-    abstract void finalMapToTraY(double mapY);
+    abstract public double finalTraToMapX(double traX);
+    abstract public double finalTraToMapY(double traY);
+    abstract public double finalMapToTraX(double mapX);
+    abstract public double finalMapToTraY(double mapY);
     public Slice() {
         super();
         mapX = new SimpleDoubleProperty(0);
@@ -46,9 +46,11 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         p= new ParallelTransition(t);
         name.addListener((observable, oldValue, newValue) -> setText(newValue));
         mapX.addListener((observable, oldValue, newValue) -> {
-            setTranslateX(mapToTraX(newValue.doubleValue()));
+            setTranslateX(finalMapToTraX(newValue.doubleValue()));
         });
-        mapY.addListener((observable, oldValue, newValue) -> setTranslateY(mapToTraY(newValue.doubleValue())));
+        mapY.addListener((observable, oldValue, newValue) -> {
+            setTranslateY(finalMapToTraY(newValue.doubleValue()));
+        });
         bus.subscribe(MapDraggedEvent.class, e-> {
             p.stop();
             isDragging = false;
@@ -99,21 +101,18 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
     
     protected void pressed(MouseEvent e) {
         isDragging = canBeDragged;
-        // 记录鼠标地图坐标与Slice地图坐标之间的偏移量
         recordXAY(e);
     }
-    
-    
     protected void recordXAY(MouseEvent e) {
         lastMouseX = e.getSceneX();
         lastMouseY = e.getSceneY();
         lastTraX = getTranslateX();
         lastTraY = getTranslateY();
     }
-    ;
-    abstract protected void released() ;
+    protected void released(){
+        isDragging = false;
+    }
     abstract protected void dragged(MouseEvent e) ;
-    
     @Override
     public void unload() {
         if (!loaded) return;
