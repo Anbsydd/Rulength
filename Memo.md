@@ -43,6 +43,18 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 - MiniMapConfig: sizeRatio, margin, bgColor, borderColor, borderWidth, borderRadius, thumbOpacity, thumbImagePath, viewportStrokeColor, viewportStrokeWidth, viewportOpacity, viewportMinSize
 - StageConfig: title, width, height, fullScreenExitHint
 
+## 语言配置
+- TextLan工具类: 加载 assets/textLan/ 下的语言文件，键值对查找，缺失返回键本身
+- 当前使用: Simplified Chinese.json
+- 键命名格式: 文件名+下划线+文本内容，如 SettingsUI_Title
+- 所有UI文本应使用 TextLan.get("key") 获取，不硬编码
+
+## 设置界面
+- SettingsUI: 全屏设置面板，ESC键打开/关闭，blank.png背景+半透明遮罩
+- 4个配置分组(游戏/窗口/相机/小地图)，修改立即生效
+- 保存: 写入config JSON文件 | 取消: 从JSON重新加载 | 还原: 从defaultConfig恢复
+- defaultConfig目录: 保存所有默认配置副本
+
 ## 核心类详解
 
 ### EventBus (event/EventBus.java)

@@ -32,3 +32,18 @@
   - Game.java 开始菜单背景路径 "uiImages/backgrounds/bg.jpg" → GameConfig.startMenuImagePath
 - 新增文件: GameConfig.java + gameConfig.json
 - 同步更新: readme.json (添加gameConfig字段说明), Memo.md (添加GameConfig信息)
+
+## 对话 6: 设置界面 + 语言配置
+- 时间: 2026-06-04
+- 要求: 创建全屏设置界面，支持所有config配置的修改；按Agent.md第6节规范使用语言配置
+- 新增文件:
+  - SettingsUI.java — 全屏设置面板（ESC打开/关闭，保存/取消/还原默认配置）
+  - ConfigWriter.java — 配置写入工具类
+  - TextLan.java — 语言配置工具类
+  - assets/defaultConfig/ — 默认配置副本目录
+  - assets/textLan/Simplified Chinese.json — 简体中文语言文件
+- 修改文件:
+  - Game.java — 添加SettingsUI初始化、apply方法、语言加载
+  - MiniMap.java — 添加applyConfig方法
+  - SettingsUI.java — 所有文本使用TextLan.get()替代硬编码
+- 语言键命名格式: 文件名_文本内容，如 SettingsUI_Title

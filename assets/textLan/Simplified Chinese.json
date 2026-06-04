@@ -1,0 +1,10 @@
+{
+  "SettingsUI_Title": "⚙ 设置",
+  "SettingsUI_Save": "💾 保存",
+  "SettingsUI_Cancel": "❌ 取消",
+  "SettingsUI_ResetDefault": "🔄 还原默认配置",
+  "SettingsUI_GameConfig": "🎮 游戏配置",
+  "SettingsUI_StageConfig": "🖥 窗口配置",
+  "SettingsUI_CameraConfig": "📷 相机配置",
+  "SettingsUI_MiniMapConfig": "🗺 小地图配置"
+}

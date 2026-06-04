@@ -16,6 +16,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import util.ImageManager;
+import util.TextLan;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -137,7 +138,7 @@ public class SettingsUI extends StackPane {
         mainPanel.setMaxHeight(Double.MAX_VALUE);
 
         // 标题
-        Label titleLabel = new Label("⚙ 设置");
+        Label titleLabel = new Label(TextLan.get("SettingsUI_Title"));
         titleLabel.setFont(Font.font("Microsoft YaHei", FontWeight.BOLD, 28));
         titleLabel.setTextFill(Color.WHITE);
 
@@ -284,13 +285,13 @@ public class SettingsUI extends StackPane {
         bar.setAlignment(Pos.CENTER);
         bar.setPadding(new Insets(10, 0, 10, 0));
 
-        Button saveBtn = createStyledButton("💾 保存", "#4CAF50");
+        Button saveBtn = createStyledButton(TextLan.get("SettingsUI_Save"), "#4CAF50");
         saveBtn.setOnAction(e -> saveConfigs());
 
-        Button cancelBtn = createStyledButton("❌ 取消", "#f44336");
+        Button cancelBtn = createStyledButton(TextLan.get("SettingsUI_Cancel"), "#f44336");
         cancelBtn.setOnAction(e -> cancelConfigs());
 
-        Button resetBtn = createStyledButton("🔄 还原默认配置", "#FF9800");
+        Button resetBtn = createStyledButton(TextLan.get("SettingsUI_ResetDefault"), "#FF9800");
         resetBtn.setOnAction(e -> resetToDefaults());
 
         bar.getChildren().addAll(saveBtn, cancelBtn, resetBtn);
@@ -494,10 +495,10 @@ public class SettingsUI extends StackPane {
      */
     private String getDisplayName(String fileName) {
         return switch (fileName) {
-            case "gameConfig.json" -> "🎮 游戏配置";
-            case "stageConfig.json" -> "🖥 窗口配置";
-            case "cameraConfig.json" -> "📷 相机配置";
-            case "miniMapConfig.json" -> "🗺 小地图配置";
+            case "gameConfig.json" -> TextLan.get("SettingsUI_GameConfig");
+            case "stageConfig.json" -> TextLan.get("SettingsUI_StageConfig");
+            case "cameraConfig.json" -> TextLan.get("SettingsUI_CameraConfig");
+            case "miniMapConfig.json" -> TextLan.get("SettingsUI_MiniMapConfig");
             default -> fileName;
         };
     }

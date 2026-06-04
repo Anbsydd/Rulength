@@ -42,6 +42,8 @@ public class Game {
     public static double multiY = 1.0;
     public Game(Stage stage) throws Exception {
         bus = new EventBus();
+        // 加载语言配置
+        util.TextLan.load("Simplified Chinese.json");
         // 加载游戏配置
         gameConfig = ConfigLoader.loadConfig(GAME_CONFIG_PATH, GameConfig.class);
         mainPool = new ThreadPoolExecutor(gameConfig.corePoolSize, gameConfig.maxPoolSize, gameConfig.keepAliveSeconds, TimeUnit.SECONDS, new LinkedBlockingQueue<>(gameConfig.queueCapacity), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
