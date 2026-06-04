@@ -2,8 +2,11 @@ package game;
 
 import config.CameraConfig;
 import config.ConfigLoader;
-import data.MoveSlice;
-import data.StaticSlice;
+import event.EventBus;
+import event.MapTransformEvent;
+import event.StageSizeChange;
+import game.slice.MoveSlice;
+import game.slice.StaticSlice;
 import game.window.Camera;
 import game.window.Stage;
 import javafx.scene.Node;
@@ -11,9 +14,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
-import post.EventBus;
-import post.ui.MapTransformEvent;
-import post.ui.StageSizeChange;
 import util.ImageManager;
 import util.PaneSizeManager;
 

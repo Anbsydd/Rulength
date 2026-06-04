@@ -1,8 +1,8 @@
 package util;
 
 
+import event.StageSizeChange;
 import javafx.scene.layout.Pane;
-import post.ui.StageSizeChange;
 
 import static game.Game.bus;
 

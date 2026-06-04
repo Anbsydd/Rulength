@@ -1,13 +1,13 @@
 package game.window;
 
 import config.CameraConfig;
+import event.MapTransformEvent;
+import event.StageSizeChange;
 import javafx.animation.AnimationTimer;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
-import post.ui.MapTransformEvent;
-import post.ui.StageSizeChange;
 import util.PaneSizeManager;
 
 import static game.Game.bus;
@@ -121,10 +121,10 @@ public class Camera extends StackPane {
     }
 
     private void initInputHandlers() {
-        bus.subscribe(post.camera.Scrolled.class, e -> cameraScrolled(e.event()));
-        bus.subscribe(post.camera.Pressed.class, e -> cameraPressed(e.event()));
-        bus.subscribe(post.camera.Dragged.class, e -> cameraDragged(e.event()));
-        bus.subscribe(post.camera.Released.class, e -> cameraReleased(e.event()));
+        bus.subscribe(event.input.MouseScrolled.class, e -> cameraScrolled(e.event()));
+        bus.subscribe(event.input.MousePressed.class, e -> cameraPressed(e.event()));
+        bus.subscribe(event.input.MouseDragged.class, e -> cameraDragged(e.event()));
+        bus.subscribe(event.input.MouseReleased.class, e -> cameraReleased(e.event()));
         addEventFilter(ScrollEvent.ANY, this::cameraScrolled);
         addEventFilter(MouseEvent.MOUSE_PRESSED, this::cameraPressed);
         addEventFilter(MouseEvent.MOUSE_DRAGGED, this::cameraDragged);

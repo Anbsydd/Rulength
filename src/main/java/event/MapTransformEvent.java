@@ -1,4 +1,4 @@
-package post.ui;
+package event;
 
 /**
  * 地图变换事件（统一）
