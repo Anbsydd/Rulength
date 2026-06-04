@@ -165,6 +165,18 @@ public class Camera extends StackPane {
     }
 
     /**
+     * 跳转到指定偏移位置（保持当前缩放不变）
+     */
+    public static void jumpTo(double offsetX, double offsetY) {
+        if (instance != null) {
+            instance.targetOffsetX = Math.max(-0.5 * instance.viewportWidth * (instance.targetZoom - 1),
+                    Math.min(0.5 * instance.viewportWidth * (instance.targetZoom - 1), offsetX));
+            instance.targetOffsetY = Math.max(-0.5 * instance.viewportHeight * (instance.targetZoom - 1),
+                    Math.min(0.5 * instance.viewportHeight * (instance.targetZoom - 1), offsetY));
+        }
+    }
+
+    /**
      * 冻结动画：将目标状态同步到当前渲染状态，使动画停在当前位置
      */
     public static void freeze() {

@@ -2,12 +2,14 @@ package game;
 
 import config.CameraConfig;
 import config.ConfigLoader;
+import config.MiniMapConfig;
 import event.EventBus;
 import event.MapTransformEvent;
 import event.StageSizeChange;
 import game.slice.MoveSlice;
 import game.slice.StaticSlice;
 import game.window.Camera;
+import game.window.MiniMap;
 import game.window.Stage;
 import javafx.scene.Node;
 import javafx.scene.image.ImageView;
@@ -31,6 +33,8 @@ public class Game {
     public static ExecutorService mainPool;
     // Camera 配置文件路径
     private static final String CAMERA_CONFIG_PATH = "assets/config/cameraConfig.json";
+    // MiniMap 配置文件路径
+    private static final String MINIMAP_CONFIG_PATH = "assets/config/miniMapConfig.json";
     public final double ORIGIN_SCENE_WIDTH;
     public final double ORIGIN_SCENE_HEIGHT;
     public static double multiX = 1.0;
@@ -48,11 +52,13 @@ public class Game {
         initCamera();
         initStatic();
         initMove();
-        // 先添加 map（底层），再添加 camera（顶层，拦截输入）
+        initMiniMap();
+        // 先添加 map（底层），再添加 camera（顶层，拦截输入），最后添加小地图（最顶层）
         root.getChildren().add(map);
         root.getChildren().add(camera);
         root.getChildren().add(static1);
         root.getChildren().add(move);
+        root.getChildren().add(miniMap);
         camera.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
             if(e.getButton() == MouseButton.SECONDARY){
             
@@ -120,6 +126,18 @@ public class Game {
     private void initCamera() throws Exception {
         CameraConfig cameraConfig = ConfigLoader.loadConfig(CAMERA_CONFIG_PATH, CameraConfig.class);
         camera = new Camera(cameraConfig, root.getWidth(), root.getHeight());
+    }
+
+    private MiniMap miniMap;
+
+    private void initMiniMap() throws Exception {
+        MiniMapConfig miniMapConfig = ConfigLoader.loadConfig(MINIMAP_CONFIG_PATH, MiniMapConfig.class);
+        miniMap = new MiniMap(miniMapConfig, root.getWidth(), root.getHeight());
+        // 延迟定位：等布局完成后再定位
+        javafx.application.Platform.runLater(() -> miniMap.reposition());
+        // 窗口大小变化时重新定位
+        root.widthProperty().addListener((obs, oldVal, newVal) -> miniMap.reposition());
+        root.heightProperty().addListener((obs, oldVal, newVal) -> miniMap.reposition());
     }
     private void sendRootSizeChangedEvent(double width, double height, double oldWidth, double oldHeight) {
         multiX = width/ORIGIN_SCENE_WIDTH;
