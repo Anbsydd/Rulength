@@ -12,7 +12,7 @@ public class Stage {
 
     private final javafx.stage.Stage javafxStage;
     private final StackPane root;
-    private static Scene scene;
+    public static Scene scene;
     private final Game game;
 
     public Stage(javafx.stage.Stage javafxStage) throws Exception {

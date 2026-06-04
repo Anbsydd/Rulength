@@ -63,10 +63,14 @@ public class Camera extends StackPane {
     private double dragStartOffsetY;
     private boolean isDragging = false;
 
+    // ---- 单例引用 ----
+    private static Camera instance;
+
     // ---- 动画计时器 ----
     private final AnimationTimer renderLoop;
 
     public Camera(CameraConfig config, double width, double height) {
+        instance = this;
         use(config);
         viewportWidth = width;
         viewportHeight = height;
@@ -151,11 +155,23 @@ public class Camera extends StackPane {
 
     private void cameraPressed(MouseEvent event) {
         if (event.getButton() == MouseButton.SECONDARY) {
+            freeze();
             dragStartX = event.getSceneX() - 0.5 * viewportWidth;
             dragStartY = event.getSceneY() - 0.5 * viewportHeight;
             dragStartOffsetX = targetOffsetX;
             dragStartOffsetY = targetOffsetY;
             isDragging = true;
+        }
+    }
+
+    /**
+     * 冻结动画：将目标状态同步到当前渲染状态，使动画停在当前位置
+     */
+    public static void freeze() {
+        if (instance != null) {
+            instance.targetOffsetX = instance.offsetX;
+            instance.targetOffsetY = instance.offsetY;
+            instance.targetZoom = instance.zoom;
         }
     }
 

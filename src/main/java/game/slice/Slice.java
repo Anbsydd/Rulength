@@ -86,9 +86,9 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
         recordXAY(e);
     }
 
-    protected void recordXAY(MouseEvent e) {
-        lastMouseX = e.getSceneX();
-        lastMouseY = e.getSceneY();
+    protected void recordXAY(double MouseSceneX, double MouseSceneY) {
+        lastMouseX = MouseSceneX;
+        lastMouseY = MouseSceneY;
         lastTraX = getTranslateX();
         lastTraY = getTranslateY();
     }

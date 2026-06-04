@@ -14,8 +14,7 @@ public class StaticSlice extends Slice {
         bus.subscribe(MapTransformEvent.class, e -> {
             if (isDragging) {
                 reloadTra();
-                lastTraX = getTranslateX();
-                lastTraY = getTranslateY();
+                
             } else {
                 reloadTra();
             }
@@ -41,6 +40,14 @@ public class StaticSlice extends Slice {
             released();
             reloadTra();
         });
+    }
+
+    @Override
+    protected void pressed(MouseEvent e) {
+        super.pressed(e);
+        if (isDragging) {
+            game.window.Camera.freeze();
+        }
     }
 
     @Override
