@@ -16,6 +16,7 @@ cash1/
 │   │   ├── gameConfig.json      → GameConfig
 │   │   ├── miniMapConfig.json   → MiniMapConfig
 │   │   ├── readme.json          → 配置字段说明
+│   │   ├── settingsConfig.json  → SettingsConfig
 │   │   └── stageConfig.json     → StageConfig
 │   └── uiImages/
 │       ├── backgrounds/ (bg.jpg, blank.png, map.png, newspaper.png, title.png)
@@ -42,6 +43,7 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 - CameraConfig: offsetX, offsetY, zoom, minZoom, maxZoom, ZOOM_STEP, lerpDrag, lerpZoom
 - MiniMapConfig: sizeRatio, margin, bgColor, borderColor, borderWidth, borderRadius, thumbOpacity, thumbImagePath, viewportStrokeColor, viewportStrokeWidth, viewportOpacity, viewportMinSize
 - StageConfig: title, width, height, fullScreenExitHint
+- SettingsConfig: opacity
 
 ## 语言配置
 - TextLan工具类: 加载 assets/textLan/ 下的语言文件，键值对查找，缺失返回键本身

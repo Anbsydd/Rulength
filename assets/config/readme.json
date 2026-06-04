@@ -23,6 +23,9 @@
     "lerpDrag": "拖拽时插值速度，1.0=完全即时跟随鼠标",
     "lerpZoom": "缩放时插值速度，值越小动画越慢越丝滑"
   },
+  "settingsConfig.json": {
+    "opacity": "设置界面透明度，0=全透明，1=不透明"
+  },
   "miniMapConfig.json": {
     "sizeRatio": "小地图相对视口的比例，0.25=1/4视口大小",
     "margin": "小地图距视口边缘的边距（像素）",

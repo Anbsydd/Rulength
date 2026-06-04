@@ -37,13 +37,15 @@ public class SettingsUI extends StackPane {
     private static final String CONFIG_DIR = "assets/config/";
     private static final String DEFAULT_CONFIG_DIR = "assets/defaultConfig/";
     private static final String README_PATH = CONFIG_DIR + "readme.json";
+    private static final String SETTINGS_CONFIG_PATH = CONFIG_DIR + "settingsConfig.json";
 
     // 配置文件名列表
     private static final String[] CONFIG_FILES = {
             "gameConfig.json",
             "stageConfig.json",
             "cameraConfig.json",
-            "miniMapConfig.json"
+            "miniMapConfig.json",
+            "settingsConfig.json"
     };
 
     // 配置类映射
@@ -54,7 +56,12 @@ public class SettingsUI extends StackPane {
         CONFIG_CLASSES.put("stageConfig.json", StageConfig.class);
         CONFIG_CLASSES.put("cameraConfig.json", CameraConfig.class);
         CONFIG_CLASSES.put("miniMapConfig.json", MiniMapConfig.class);
+        CONFIG_CLASSES.put("settingsConfig.json", SettingsConfig.class);
     }
+
+    // 设置界面自身配置
+    private SettingsConfig settingsConfig;
+    private StackPane overlay;
 
     // 当前生效的配置对象（用于取消时恢复）
     private final Map<String, Object> savedConfigs = new LinkedHashMap<>();
@@ -76,10 +83,24 @@ public class SettingsUI extends StackPane {
     private boolean dirty = false;
 
     public SettingsUI() {
+        loadSettingsConfig();
         loadReadme();
         loadSavedConfigs();
         buildUI();
         setupEscHandler();
+    }
+
+    /**
+     * 加载设置界面自身配置
+     */
+    private void loadSettingsConfig() {
+        try {
+            settingsConfig = ConfigLoader.loadConfig(SETTINGS_CONFIG_PATH, SettingsConfig.class);
+        } catch (Exception e) {
+            settingsConfig = new SettingsConfig();
+            settingsConfig.opacity = 0.5;
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -125,11 +146,14 @@ public class SettingsUI extends StackPane {
         getChildren().add(bgView);
 
         // 半透明遮罩
-        StackPane overlay = new StackPane();
+        overlay = new StackPane();
         overlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.6);");
         overlay.prefWidthProperty().bind(widthProperty());
         overlay.prefHeightProperty().bind(heightProperty());
         getChildren().add(overlay);
+
+        // 整体透明度（背景+界面）
+        setOpacity(settingsConfig.opacity);
 
         // 主面板
         VBox mainPanel = new VBox(15);
@@ -394,6 +418,7 @@ public class SettingsUI extends StackPane {
             case "miniMapConfig.json" -> game.applyMiniMapConfig((MiniMapConfig) config);
             case "gameConfig.json" -> {} // 线程池参数运行时不可更改，保存后下次启动生效
             case "stageConfig.json" -> game.applyStageConfig((StageConfig) config);
+            case "settingsConfig.json" -> applySettingsConfig((SettingsConfig) config);
         }
     }
 
@@ -482,6 +507,14 @@ public class SettingsUI extends StackPane {
     }
 
     /**
+     * 应用设置界面自身配置（运行时热更新）
+     */
+    private void applySettingsConfig(SettingsConfig config) {
+        this.settingsConfig = config;
+        setOpacity(config.opacity);
+    }
+
+    /**
      * 关闭设置界面
      */
     private void closeSettings() {
@@ -499,6 +532,7 @@ public class SettingsUI extends StackPane {
             case "stageConfig.json" -> TextLan.get("SettingsUI_StageConfig");
             case "cameraConfig.json" -> TextLan.get("SettingsUI_CameraConfig");
             case "miniMapConfig.json" -> TextLan.get("SettingsUI_MiniMapConfig");
+            case "settingsConfig.json" -> TextLan.get("SettingsUI_SettingsConfig");
             default -> fileName;
         };
     }
