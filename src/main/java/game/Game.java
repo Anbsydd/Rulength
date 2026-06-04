@@ -2,6 +2,7 @@ package game;
 
 import config.CameraConfig;
 import config.ConfigLoader;
+import config.GameConfig;
 import config.MiniMapConfig;
 import event.EventBus;
 import event.MapTransformEvent;
@@ -31,17 +32,21 @@ public class Game {
     StackPane static1;
     StackPane move;
     public static ExecutorService mainPool;
-    // Camera 配置文件路径
+    // 配置文件路径
+    private static final String GAME_CONFIG_PATH = "assets/config/gameConfig.json";
     private static final String CAMERA_CONFIG_PATH = "assets/config/cameraConfig.json";
-    // MiniMap 配置文件路径
     private static final String MINIMAP_CONFIG_PATH = "assets/config/miniMapConfig.json";
+    // 游戏配置
+    private GameConfig gameConfig;
     public final double ORIGIN_SCENE_WIDTH;
     public final double ORIGIN_SCENE_HEIGHT;
     public static double multiX = 1.0;
     public static double multiY = 1.0;
     public Game(Stage stage) throws Exception {
         bus = new EventBus();
-        mainPool = new ThreadPoolExecutor(4, 8, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
+        // 加载游戏配置
+        gameConfig = ConfigLoader.loadConfig(GAME_CONFIG_PATH, GameConfig.class);
+        mainPool = new ThreadPoolExecutor(gameConfig.corePoolSize, gameConfig.maxPoolSize, gameConfig.keepAliveSeconds, TimeUnit.SECONDS, new LinkedBlockingQueue<>(gameConfig.queueCapacity), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
         this.stage = stage;
         initRoot();
         ORIGIN_SCENE_WIDTH=root.getWidth();
@@ -101,7 +106,7 @@ public class Game {
         startMenu = new StackPane();
         PaneSizeManager.add(startMenu,1);
         PaneSizeManager.set(startMenu, root.getWidth(), root.getHeight());
-        ImageView bgView = new ImageView(ImageManager.load("uiImages/backgrounds/bg.jpg"));
+        ImageView bgView = new ImageView(ImageManager.load(gameConfig.startMenuImagePath));
         bgView.setPreserveRatio(false);
         bgView.setSmooth(true);
         bgView.fitWidthProperty().bind(startMenu.widthProperty());
@@ -113,7 +118,7 @@ public class Game {
         PaneSizeManager.add(map,1);
         PaneSizeManager.set(map, root.getWidth(), root.getHeight());
 
-        ImageView bgView = new ImageView(ImageManager.load("uiImages/backgrounds/map.png"));
+        ImageView bgView = new ImageView(ImageManager.load(gameConfig.mapImagePath));
         bgView.setPreserveRatio(false);
         bgView.setSmooth(true);
         bgView.fitWidthProperty().bind(map.widthProperty());

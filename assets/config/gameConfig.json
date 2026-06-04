@@ -1,0 +1,8 @@
+{
+  "corePoolSize" : 4,
+  "maxPoolSize" : 8,
+  "keepAliveSeconds" : 60,
+  "queueCapacity" : 100,
+  "mapImagePath" : "uiImages/backgrounds/map.png",
+  "startMenuImagePath" : "uiImages/backgrounds/bg.jpg"
+}

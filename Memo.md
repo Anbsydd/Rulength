@@ -13,7 +13,9 @@ cash1/
 ├── assets/
 │   ├── config/
 │   │   ├── cameraConfig.json    → CameraConfig
+│   │   ├── gameConfig.json      → GameConfig
 │   │   ├── miniMapConfig.json   → MiniMapConfig
+│   │   ├── readme.json          → 配置字段说明
 │   │   └── stageConfig.json     → StageConfig
 │   └── uiImages/
 │       ├── backgrounds/ (bg.jpg, blank.png, map.png, newspaper.png, title.png)
@@ -36,6 +38,7 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 
 ## 配置体系
 - ConfigLoader: JSON → Map → 反射赋值到Config类（支持int/double/boolean/String）
+- GameConfig: corePoolSize, maxPoolSize, keepAliveSeconds, queueCapacity, mapImagePath, startMenuImagePath
 - CameraConfig: offsetX, offsetY, zoom, minZoom, maxZoom, ZOOM_STEP, lerpDrag, lerpZoom
 - MiniMapConfig: sizeRatio, margin, bgColor, borderColor, borderWidth, borderRadius, thumbOpacity, thumbImagePath, viewportStrokeColor, viewportStrokeWidth, viewportOpacity, viewportMinSize
 - StageConfig: title, width, height, fullScreenExitHint
@@ -71,10 +74,11 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 
 ### Game (game/Game.java)
 - 全局EventBus: bus (static)
-- 线程池: mainPool (4~8线程)
+- 线程池: mainPool（参数由GameConfig配置）
 - multiX/Y: 窗口缩放倍率 = currentSize/ORIGIN_SIZE
 - moveWithMap(): 订阅MapTransformEvent，setTranslateX/Y + setScaleX/Y
 - sendRootSizeChangedEvent(): 窗口resize时发布StageSizeChange
+- 地图/菜单背景图片路径由GameConfig配置
 
 ### Stage (game/window/Stage.java)
 - 封装javafx.stage.Stage
@@ -135,14 +139,4 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 - Slice地图坐标: mapX/Y → translateX/Y 通过Coordinatable转换
 - multiX/Y: 窗口实际大小 / 初始大小，用于Slice坐标适配
 
-## 已修复问题
-1. MiniMap白色框不跟随拖拽
-   - 原因1: 坐标公式错误（用了sceneToLocal，回调顺序不确定）
-   - 原因2: Rectangle在StackPane中setX/setY被布局管理器覆盖
-   - 修复: 手动坐标计算 + setManaged(false) + setLayoutX/setLayoutY
-2. MiniMap硬编码参数提取为MiniMapConfig + miniMapConfig.json
-
-## 已知问题/待办
-- LifeCycled.disposables 是接口默认静态字段，所有实现类共享同一个列表（潜在bug）
-- MiniMap运行时动态修改配置（热更新）
 

@@ -2,9 +2,9 @@
   "offsetX" : 0,
   "offsetY" : 0,
   "zoom" : 1.0,
-  "minZoom" : 1.0,
+  "minZoom" : 1,
   "maxZoom" : 2000000,
   "ZOOM_STEP" : 1.1,
   "lerpDrag" : 1.0,
-  "lerpZoom" : 0.1
+  "lerpZoom" : 0.01
 }

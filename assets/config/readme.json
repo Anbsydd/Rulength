@@ -1,0 +1,40 @@
+{
+  "gameConfig.json": {
+    "corePoolSize": "线程池核心线程数",
+    "maxPoolSize": "线程池最大线程数",
+    "keepAliveSeconds": "线程池空闲线程存活时间（秒）",
+    "queueCapacity": "线程池任务队列容量",
+    "mapImagePath": "地图背景图片路径（相对assets目录）",
+    "startMenuImagePath": "开始菜单背景图片路径（相对assets目录）"
+  },
+  "stageConfig.json": {
+    "title": "窗口标题",
+    "width": "窗口初始宽度（像素）",
+    "height": "窗口初始高度（像素）",
+    "fullScreenExitHint": "全屏退出提示文本，空字符串则不提示"
+  },
+  "cameraConfig.json": {
+    "offsetX": "相机水平偏移量（像素），正值向右，0=居中",
+    "offsetY": "相机垂直偏移量（像素），正值向下，0=居中",
+    "zoom": "初始缩放比例，1.0=原始大小",
+    "minZoom": "最小缩放比例",
+    "maxZoom": "最大缩放比例",
+    "ZOOM_STEP": "每次滚轮缩放的倍率，>1则放大，<1则缩小",
+    "lerpDrag": "拖拽时插值速度，1.0=完全即时跟随鼠标",
+    "lerpZoom": "缩放时插值速度，值越小动画越慢越丝滑"
+  },
+  "miniMapConfig.json": {
+    "sizeRatio": "小地图相对视口的比例，0.25=1/4视口大小",
+    "margin": "小地图距视口边缘的边距（像素）",
+    "bgColor": "小地图背景色（CSS颜色值）",
+    "borderColor": "小地图边框颜色（CSS颜色值）",
+    "borderWidth": "小地图边框宽度（像素）",
+    "borderRadius": "小地图边框圆角（像素）",
+    "thumbOpacity": "缩略图透明度，0=全透明，1=不透明",
+    "thumbImagePath": "缩略图图片路径（相对assets目录）",
+    "viewportStrokeColor": "视口矩形框描边颜色（JavaFX Color名称或十六进制）",
+    "viewportStrokeWidth": "视口矩形框描边宽度（像素）",
+    "viewportOpacity": "视口矩形框透明度，0=全透明，1=不透明",
+    "viewportMinSize": "视口矩形框最小尺寸（像素），防止缩放过小时矩形消失"
+  }
+}

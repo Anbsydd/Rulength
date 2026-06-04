@@ -16,3 +16,19 @@
   - CodeGeeX_Memo.md — 完整项目信息备忘录
   - Chat_Framework.md — 仅保留对话要求
   - Chat_History.md — 历史对话记录（本文件）
+
+## 对话 4: 配置文件字段说明
+- 时间: 2026-06-04
+- 要求: 在 assets/config/readme.json 中记录所有配置文件的字段说明
+- 结果: 创建 readme.json，包含 stageConfig/cameraConfig/miniMapConfig 共 24 个字段说明
+
+## 对话 5: 全项目配置提取
+- 时间: 2026-06-04
+- 要求: 遍历项目文件，将硬编码参数提取到config文件中
+- 分析: Camera/MiniMap/Stage 已有Config注入，无需改动；Slice.canBeDragged是实例属性不需提取
+- 提取内容:
+  - Game.java 线程池参数 (4,8,60,100) → GameConfig.corePoolSize/maxPoolSize/keepAliveSeconds/queueCapacity
+  - Game.java 地图背景路径 "uiImages/backgrounds/map.png" → GameConfig.mapImagePath
+  - Game.java 开始菜单背景路径 "uiImages/backgrounds/bg.jpg" → GameConfig.startMenuImagePath
+- 新增文件: GameConfig.java + gameConfig.json
+- 同步更新: readme.json (添加gameConfig字段说明), Memo.md (添加GameConfig信息)
