@@ -2,6 +2,7 @@ package game;
 
 import config.CameraConfig;
 import config.ConfigLoader;
+import config.MiniMapConfig;
 import event.EventBus;
 import event.MapTransformEvent;
 import event.StageSizeChange;
@@ -32,6 +33,8 @@ public class Game {
     public static ExecutorService mainPool;
     // Camera 配置文件路径
     private static final String CAMERA_CONFIG_PATH = "assets/config/cameraConfig.json";
+    // MiniMap 配置文件路径
+    private static final String MINIMAP_CONFIG_PATH = "assets/config/miniMapConfig.json";
     public final double ORIGIN_SCENE_WIDTH;
     public final double ORIGIN_SCENE_HEIGHT;
     public static double multiX = 1.0;
@@ -127,8 +130,9 @@ public class Game {
 
     private MiniMap miniMap;
 
-    private void initMiniMap() {
-        miniMap = new MiniMap(root.getWidth(), root.getHeight());
+    private void initMiniMap() throws Exception {
+        MiniMapConfig miniMapConfig = ConfigLoader.loadConfig(MINIMAP_CONFIG_PATH, MiniMapConfig.class);
+        miniMap = new MiniMap(miniMapConfig, root.getWidth(), root.getHeight());
         // 延迟定位：等布局完成后再定位
         javafx.application.Platform.runLater(() -> miniMap.reposition());
         // 窗口大小变化时重新定位

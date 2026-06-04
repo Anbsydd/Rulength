@@ -1,5 +1,6 @@
 package game.window;
 
+import config.MiniMapConfig;
 import event.MapTransformEvent;
 import event.StageSizeChange;
 import javafx.scene.image.ImageView;
@@ -19,6 +20,9 @@ import static game.Game.bus;
  */
 public class MiniMap extends StackPane {
 
+    // ---- 配置 ----
+    private final MiniMapConfig config;
+
     // ---- 小地图尺寸 ----
     private double miniMapWidth;
     private double miniMapHeight;
@@ -35,16 +39,14 @@ public class MiniMap extends StackPane {
     private double currentOffsetY;
     private double currentZoom;
 
-    // ---- 边距 ----
-    private static final double MARGIN = 12;
-
-    public MiniMap(double viewportWidth, double viewportHeight) {
+    public MiniMap(MiniMapConfig config, double viewportWidth, double viewportHeight) {
+        this.config = config;
         this.viewportWidth = viewportWidth;
         this.viewportHeight = viewportHeight;
 
-        // 小地图尺寸：视口的 1/4
-        this.miniMapWidth = viewportWidth / 4;
-        this.miniMapHeight = viewportHeight / 4;
+        // 小地图尺寸
+        this.miniMapWidth = viewportWidth * config.sizeRatio;
+        this.miniMapHeight = viewportHeight * config.sizeRatio;
 
         setPickOnBounds(true);
         setMaxSize(miniMapWidth, miniMapHeight);
@@ -52,23 +54,27 @@ public class MiniMap extends StackPane {
         setMinSize(miniMapWidth, miniMapHeight);
 
         // 背景
-        setStyle("-fx-background-color: rgba(0, 0, 0, 0.5); -fx-border-color: rgba(255, 255, 255, 0.6); -fx-border-width: 1; -fx-border-radius: 4; -fx-background-radius: 4;");
+        setStyle("-fx-background-color: " + config.bgColor + ";"
+                + " -fx-border-color: " + config.borderColor + ";"
+                + " -fx-border-width: " + config.borderWidth + ";"
+                + " -fx-border-radius: " + config.borderRadius + ";"
+                + " -fx-background-radius: " + config.borderRadius + ";");
 
         // 地图缩略图
-        ImageView thumb = new ImageView(ImageManager.load("uiImages/backgrounds/map.png"));
+        ImageView thumb = new ImageView(ImageManager.load(config.thumbImagePath));
         thumb.setPreserveRatio(false);
         thumb.setSmooth(true);
         thumb.fitWidthProperty().bind(widthProperty());
         thumb.fitHeightProperty().bind(heightProperty());
-        thumb.setOpacity(0.8);
+        thumb.setOpacity(config.thumbOpacity);
         getChildren().add(thumb);
 
         // 视口矩形框
         viewportRect = new Rectangle();
         viewportRect.setFill(Color.TRANSPARENT);
-        viewportRect.setStroke(Color.WHITE);
-        viewportRect.setStrokeWidth(1.5);
-        viewportRect.setOpacity(0.9);
+        viewportRect.setStroke(Color.valueOf(config.viewportStrokeColor));
+        viewportRect.setStrokeWidth(config.viewportStrokeWidth);
+        viewportRect.setOpacity(config.viewportOpacity);
         viewportRect.setManaged(false);
         getChildren().add(viewportRect);
 
@@ -92,23 +98,22 @@ public class MiniMap extends StackPane {
         double parentWidth = getParent() != null ? ((javafx.scene.layout.Pane) getParent()).getWidth() : viewportWidth;
         double parentHeight = getParent() != null ? ((javafx.scene.layout.Pane) getParent()).getHeight() : viewportHeight;
         // 居中位置偏移到右上角：向右 (parentWidth/2 - miniMapWidth/2 - MARGIN)，向上 -(parentHeight/2 - miniMapHeight/2 - MARGIN)
-        setTranslateX(parentWidth / 2 - miniMapWidth / 2 - MARGIN);
-        setTranslateY(-parentHeight / 2 + miniMapHeight / 2 + MARGIN);
+        setTranslateX(parentWidth / 2 - miniMapWidth / 2 - config.margin);
+        setTranslateY(-parentHeight / 2 + miniMapHeight / 2 + config.margin);
     }
 
     private void onMapTransform(MapTransformEvent e) {
         currentOffsetX = e.offsetX();
         currentOffsetY = e.offsetY();
         currentZoom = e.zoom();
-        System.out.println("[MiniMap] onMapTransform: offsetX=" + currentOffsetX + ", offsetY=" + currentOffsetY + ", zoom=" + currentZoom);
         updateViewportRect();
     }
 
     private void onStageResize(StageSizeChange e) {
         viewportWidth = e.width();
         viewportHeight = e.height();
-        miniMapWidth = viewportWidth / 4;
-        miniMapHeight = viewportHeight / 4;
+        miniMapWidth = viewportWidth * config.sizeRatio;
+        miniMapHeight = viewportHeight * config.sizeRatio;
         setMaxSize(miniMapWidth, miniMapHeight);
         setPrefSize(miniMapWidth, miniMapHeight);
         setMinSize(miniMapWidth, miniMapHeight);
@@ -153,8 +158,8 @@ public class MiniMap extends StackPane {
 
         viewportRect.setLayoutX(rectX);
         viewportRect.setLayoutY(rectY);
-        viewportRect.setWidth(Math.max(2, rectW));
-        viewportRect.setHeight(Math.max(2, rectH));
+        viewportRect.setWidth(Math.max(config.viewportMinSize, rectW));
+        viewportRect.setHeight(Math.max(config.viewportMinSize, rectH));
     }
 
     /**
