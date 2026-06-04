@@ -226,7 +226,8 @@ public class Camera extends StackPane {
      */
     private void lerpAndPublish() {
         // 偏移量：拖拽时即时跟随，非拖拽时平滑过渡
-        double offsetLerp = isDragging ? lerpDrag : lerpZoom;
+        // 缩放动画进行中时（zoom未到达target），使用lerpZoom保持offset与zoom同步，避免抖动
+        double offsetLerp = (isDragging && Math.abs(zoom - targetZoom) < 0.0001) ? lerpDrag : lerpZoom;
         // 缩放：始终平滑过渡，拖拽不会打断缩放动画
         double zoomLerp = lerpZoom;
 

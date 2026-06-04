@@ -14,8 +14,6 @@ import game.window.MiniMap;
 import game.window.Stage;
 import javafx.scene.Node;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import util.ImageManager;
 import util.PaneSizeManager;
@@ -64,11 +62,6 @@ public class Game {
         root.getChildren().add(static1);
         root.getChildren().add(move);
         root.getChildren().add(miniMap);
-        camera.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if(e.getButton() == MouseButton.SECONDARY){
-            
-            }
-        });
     }
     
     private void initStatic() {
