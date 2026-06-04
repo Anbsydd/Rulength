@@ -32,7 +32,7 @@ public class Game {
     StackPane move;
     public static ExecutorService mainPool;
     // Camera 配置文件路径
-    private static final String CAMERA_CONFIG_PATH = "assets/cameraConfig.json";
+    private static final String CAMERA_CONFIG_PATH = "assets/config/cameraConfig.json";
     public final double ORIGIN_SCENE_WIDTH;
     public final double ORIGIN_SCENE_HEIGHT;
     public static double multiX = 1.0;
@@ -57,7 +57,7 @@ public class Game {
         root.getChildren().add(move);
         camera.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
             if(e.getButton() == MouseButton.SECONDARY){
-                System.out.println(Game.multiY);
+            
             }
         });
     }

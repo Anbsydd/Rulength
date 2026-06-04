@@ -8,7 +8,7 @@ import javafx.scene.layout.StackPane;
 
 public class Stage {
 
-    private static final String CONFIG_PATH = "assets/stageConfig.json";
+    private static final String CONFIG_PATH = "assets/config/stageConfig.json";
 
     private final javafx.stage.Stage javafxStage;
     private final StackPane root;

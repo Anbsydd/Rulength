@@ -16,7 +16,6 @@ import javafx.scene.input.ScrollEvent;
 import javafx.util.Duration;
 import post.ui.MapDraggedEvent;
 import post.ui.MapScrolledEvent;
-import post.ui.StageSizeChange;
 
 import static game.Game.bus;
 
@@ -34,6 +33,7 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
     StringProperty name = new SimpleStringProperty("");
     TranslateTransition t;
     ParallelTransition p;
+    protected double[] size;
     abstract public double finalTraToMapX(double traX);
     abstract public double finalTraToMapY(double traY);
     abstract public double finalMapToTraX(double mapX);
@@ -57,12 +57,6 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         });
         bus.subscribe(MapScrolledEvent.class, e-> {
             isDragging = false;
-        });
-        
-        
-        bus.subscribe(StageSizeChange.class, e-> {
-            System.out.println("tra:"+getTranslateX()+" "+getTranslateY());
-            System.out.println("map:"+mapX.get()+" "+mapY.get());
         });
     }
     
@@ -129,13 +123,6 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         this.name.set(name);
     }
     
-    public void setMapX(double mapX) {
-        this.mapX.set(mapX);
-    }
-    
-    public void setMapY(double mapY) {
-        this.mapY.set(mapY);
-    }
     public void setLocation(double x, double y) {
         setMapX(x);
         setMapY(y);
@@ -148,4 +135,23 @@ public abstract class Slice extends Button implements LifeCycled, TextSized ,Sho
         return p;
     }
     
+    public void setMapX(double mapX) {
+        this.mapX.set(mapX);
+    }
+    
+    public void setMapY(double mapY) {
+        this.mapY.set(mapY);
+    }
+    public double getMapX() {
+        return mapX.get();
+    }
+    public DoubleProperty mapXProperty() {
+        return mapX;
+    }
+    public double getMapY() {
+        return mapY.get();
+    }
+    public DoubleProperty mapYProperty() {
+        return mapY;
+    }
 }
