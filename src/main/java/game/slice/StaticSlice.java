@@ -12,12 +12,8 @@ public class StaticSlice extends Slice {
     public StaticSlice() {
         super();
         bus.subscribe(MapTransformEvent.class, e -> {
-            if (isDragging) {
-                reloadTra();
-                
-            } else {
-                reloadTra();
-            }
+            released();
+            reloadTra();
         });
         bus.subscribe(StageSizeChange.class, e -> {
             released();
@@ -28,13 +24,8 @@ public class StaticSlice extends Slice {
     public StaticSlice(double x, double y) {
         super(x, y);
         bus.subscribe(MapTransformEvent.class, e -> {
-            if (isDragging) {
-                reloadTra();
-                lastTraX = getTranslateX();
-                lastTraY = getTranslateY();
-            } else {
-                reloadTra();
-            }
+            released();
+            reloadTra();
         });
         bus.subscribe(StageSizeChange.class, e -> {
             released();

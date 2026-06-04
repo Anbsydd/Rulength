@@ -83,7 +83,7 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
 
     protected void pressed(MouseEvent e) {
         isDragging = canBeDragged;
-        recordXAY(e);
+        recordXAY(e.getSceneX(), e.getSceneY());
     }
 
     protected void recordXAY(double MouseSceneX, double MouseSceneY) {
