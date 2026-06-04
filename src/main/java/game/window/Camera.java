@@ -48,11 +48,9 @@ public class Camera extends StackPane {
     // ---- 缩放步进（从配置注入）----
     private double ZOOM_STEP;
 
-    // ---- 插值速度 ----
-    /** 拖拽时插值速度，接近1.0使拖拽几乎无延迟 */
-    private static final double LERP_DRAG = 0.45;
-    /** 缩放时插值速度，较慢实现平滑缩放 */
-    private static final double LERP_ZOOM = 0.15;
+    // ---- 插值速度（从配置注入）----
+    private double lerpDrag;
+    private double lerpZoom;
 
     // ---- 视口尺寸（camera 自身尺寸 = 窗口尺寸）----
     private double viewportWidth;
@@ -98,6 +96,8 @@ public class Camera extends StackPane {
         this.minZoom = config.minZoom;
         this.maxZoom = config.maxZoom;
         this.ZOOM_STEP = config.ZOOM_STEP;
+        this.lerpDrag = config.lerpDrag;
+        this.lerpZoom = config.lerpZoom;
     }
 
     private void initCameraPane() {
@@ -197,12 +197,14 @@ public class Camera extends StackPane {
      * 每帧插值：渲染状态向目标状态平滑过渡，并发布事件
      */
     private void lerpAndPublish() {
-        // 根据当前操作类型选择插值速度
-        double lerpFactor = isDragging ? LERP_DRAG : LERP_ZOOM;
+        // 偏移量：拖拽时即时跟随，非拖拽时平滑过渡
+        double offsetLerp = isDragging ? lerpDrag : lerpZoom;
+        // 缩放：始终平滑过渡，拖拽不会打断缩放动画
+        double zoomLerp = lerpZoom;
 
-        double newOffsetX = lerp(offsetX, targetOffsetX, lerpFactor);
-        double newOffsetY = lerp(offsetY, targetOffsetY, lerpFactor);
-        double newZoom = lerp(zoom, targetZoom, lerpFactor);
+        double newOffsetX = lerp(offsetX, targetOffsetX, offsetLerp);
+        double newOffsetY = lerp(offsetY, targetOffsetY, offsetLerp);
+        double newZoom = lerp(zoom, targetZoom, zoomLerp);
 
         // 如果已经非常接近目标，直接对齐（避免无限逼近）
         boolean changed = false;
