@@ -69,6 +69,7 @@ public class MiniMap extends StackPane {
         viewportRect.setStroke(Color.WHITE);
         viewportRect.setStrokeWidth(1.5);
         viewportRect.setOpacity(0.9);
+        viewportRect.setManaged(false);
         getChildren().add(viewportRect);
 
         // 订阅地图变换事件
@@ -99,6 +100,7 @@ public class MiniMap extends StackPane {
         currentOffsetX = e.offsetX();
         currentOffsetY = e.offsetY();
         currentZoom = e.zoom();
+        System.out.println("[MiniMap] onMapTransform: offsetX=" + currentOffsetX + ", offsetY=" + currentOffsetY + ", zoom=" + currentZoom);
         updateViewportRect();
     }
 
@@ -116,33 +118,32 @@ public class MiniMap extends StackPane {
 
     /**
      * 更新视口矩形框的位置和大小
+     *
+     * 变换公式（与 moveWithMap 一致）：
+     *   setTranslateX(offsetX), setScaleX(zoom)
+     *   StackPane 中节点居中，缩放以中心为原点：
+     *   场景坐标 = (本地坐标 - mapW/2) * zoom + mapW/2 + offsetX
+     *   反推：本地坐标 = (场景坐标 - mapW/2 - offsetX) / zoom + mapW/2
      */
     private void updateViewportRect() {
         if (currentZoom <= 0) return;
 
-        // 视口在地图上的可见范围（以视口中心为原点的坐标系）
-        // 可见区域宽度 = viewportWidth / zoom
-        // 可见区域高度 = viewportHeight / zoom
-        double visibleW = viewportWidth / currentZoom;
-        double visibleH = viewportHeight / currentZoom;
+        double mapW = viewportWidth;
+        double mapH = viewportHeight;
 
-        // 可见区域左上角在地图坐标系中的位置
-        // 地图坐标 = (screenCoord - offset) / zoom
-        // 左上角 screenCoord = -viewportWidth/2, -viewportHeight/2 (相对于视口中心)
-        // 但实际 screenCoord = -viewportWidth/2 + viewportWidth/2 = 0 (场景左上角)
-        // 可见区域左上角地图坐标 = (0 - offsetX) / zoom, (0 - offsetY) / zoom
-        double mapLeft = -currentOffsetX / currentZoom;
-        double mapTop = -currentOffsetY / currentZoom;
+        // 视口左上角场景坐标 (0, 0) → map 本地坐标
+        double localLeft = (0 - mapW / 2.0 - currentOffsetX) / currentZoom + mapW / 2.0;
+        double localTop = (0 - mapH / 2.0 - currentOffsetY) / currentZoom + mapH / 2.0;
 
-        // 地图总尺寸（未缩放时等于视口尺寸）
-        double mapWidth = viewportWidth;
-        double mapHeight = viewportHeight;
+        // 视口右下角场景坐标 (viewportWidth, viewportHeight) → map 本地坐标
+        double localRight = (viewportWidth - mapW / 2.0 - currentOffsetX) / currentZoom + mapW / 2.0;
+        double localBottom = (viewportHeight - mapH / 2.0 - currentOffsetY) / currentZoom + mapH / 2.0;
 
-        // 映射到小地图坐标
-        double rectX = (mapLeft / mapWidth) * miniMapWidth;
-        double rectY = (mapTop / mapHeight) * miniMapHeight;
-        double rectW = (visibleW / mapWidth) * miniMapWidth;
-        double rectH = (visibleH / mapHeight) * miniMapHeight;
+        // map 本地坐标 [0, mapW] → 小地图坐标 [0, miniMapWidth]
+        double rectX = localLeft / mapW * miniMapWidth;
+        double rectY = localTop / mapH * miniMapHeight;
+        double rectW = (localRight - localLeft) / mapW * miniMapWidth;
+        double rectH = (localBottom - localTop) / mapH * miniMapHeight;
 
         // 限制矩形不超出小地图边界
         rectX = Math.max(0, Math.min(miniMapWidth, rectX));
@@ -150,8 +151,8 @@ public class MiniMap extends StackPane {
         rectW = Math.min(rectW, miniMapWidth - rectX);
         rectH = Math.min(rectH, miniMapHeight - rectY);
 
-        viewportRect.setX(rectX);
-        viewportRect.setY(rectY);
+        viewportRect.setLayoutX(rectX);
+        viewportRect.setLayoutY(rectY);
         viewportRect.setWidth(Math.max(2, rectW));
         viewportRect.setHeight(Math.max(2, rectH));
     }
@@ -160,14 +161,21 @@ public class MiniMap extends StackPane {
      * 点击小地图跳转到对应位置
      */
     private void jumpToMiniMapPos(double clickX, double clickY) {
-        // 小地图坐标 → 地图坐标
-        double mapX = (clickX / miniMapWidth) * viewportWidth;
-        double mapY = (clickY / miniMapHeight) * viewportHeight;
+        double mapW = viewportWidth;
+        double mapH = viewportHeight;
 
-        // 地图坐标 → 目标偏移（使得该地图点位于视口中心）
-        // offset = -mapPoint * zoom + viewportCenter (viewportCenter = 0 在当前坐标系)
-        double targetOffsetX = -mapX * currentZoom;
-        double targetOffsetY = -mapY * currentZoom;
+        // 小地图坐标 → map 本地坐标
+        double localX = (clickX / miniMapWidth) * mapW;
+        double localY = (clickY / miniMapHeight) * mapH;
+
+        // map 本地坐标 → 场景坐标
+        double sceneX = (localX - mapW / 2.0) * currentZoom + mapW / 2.0 + currentOffsetX;
+        double sceneY = (localY - mapH / 2.0) * currentZoom + mapH / 2.0 + currentOffsetY;
+
+        // 要使该场景点移动到视口中心，需要调整 offset
+        // 目标：sceneX + deltaOffset = viewportWidth/2  =>  deltaOffset = viewportWidth/2 - sceneX
+        double targetOffsetX = currentOffsetX + (viewportWidth / 2.0 - sceneX);
+        double targetOffsetY = currentOffsetY + (viewportHeight / 2.0 - sceneY);
 
         Camera.jumpTo(targetOffsetX, targetOffsetY);
     }
