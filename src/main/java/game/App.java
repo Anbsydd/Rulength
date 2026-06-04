@@ -1,3 +1,5 @@
+package game;
+
 import game.window.Stage;
 import javafx.application.Application;
 

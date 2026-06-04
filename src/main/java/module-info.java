@@ -1,0 +1,23 @@
+module Rulength {
+    requires javafx.controls;
+    requires javafx.fxml;
+    requires javafx.web;
+    requires javafx.swing;
+    requires com.fasterxml.jackson.databind;
+
+    exports event;
+    exports event.input;
+    exports game;
+    exports game.slice;
+    exports game.window;
+    exports config;
+    exports util;
+
+    opens game to javafx.graphics;
+    opens game.window to javafx.graphics;
+    opens game.slice to javafx.graphics;
+    opens config to com.fasterxml.jackson.databind;
+    opens event to javafx.graphics;
+    opens event.input to javafx.graphics;
+    opens util to javafx.graphics;
+}
