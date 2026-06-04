@@ -2,8 +2,7 @@ package data;
 
 import game.window.Camera;
 import javafx.scene.input.MouseEvent;
-import post.ui.MapDraggedEvent;
-import post.ui.MapScrolledEvent;
+import post.ui.MapTransformEvent;
 import post.ui.StageSizeChange;
 
 import static game.Game.bus;
@@ -12,11 +11,8 @@ import static game.window.Camera.zoom;
 public class MoveSlice extends Slice {
     public MoveSlice() {
         super();
-        bus.subscribe(MapDraggedEvent.class, e->{
+        bus.subscribe(MapTransformEvent.class, e->{
             reloadTra();
-        });
-        bus.subscribe(MapScrolledEvent.class, e->{
-            moveTo(finalMapToTraX(mapX.doubleValue()), finalMapToTraY(mapY.doubleValue()));
         });
         bus.subscribe(StageSizeChange.class, e-> {
             released();
@@ -27,12 +23,8 @@ public class MoveSlice extends Slice {
     
     public MoveSlice(double X, double Y) {
         super(X, Y);
-        bus.subscribe(MapDraggedEvent.class, e->{
+        bus.subscribe(MapTransformEvent.class, e->{
             reloadTra();
-        });
-        bus.subscribe(MapScrolledEvent.class, e->{
-            isDragging = false;
-            moveTo(finalMapToTraX(mapX.doubleValue()), finalMapToTraY(mapY.doubleValue()));
         });
         bus.subscribe(StageSizeChange.class, e-> {
             released();
@@ -51,10 +43,7 @@ public class MoveSlice extends Slice {
     }
     
     
-    private void reloadTra() {
-        setTranslateX(finalMapToTraX(mapX.doubleValue()));
-        setTranslateY(finalMapToTraY(mapY.doubleValue()));
-    }
+
     @Override
     public double finalTraToMapX(double traX) {
         return (traX-Camera.offsetX)/zoom/game.Game.multiX;

@@ -1,7 +1,7 @@
 package data;
 
 import javafx.scene.input.MouseEvent;
-import post.ui.MapScrolledEvent;
+import post.ui.MapTransformEvent;
 import post.ui.StageSizeChange;
 
 import static game.Game.bus;
@@ -11,24 +11,24 @@ public class StaticSlice extends Slice{
     
     public StaticSlice() {
         super();
-        bus.subscribe(MapScrolledEvent.class, e-> {
+        bus.subscribe(MapTransformEvent.class, e-> {
             released();
+            reloadTra();
         });
         bus.subscribe(StageSizeChange.class, e-> {
             released();
-            setTranslateX(finalMapToTraX(mapX.doubleValue()));
-            setTranslateY(finalMapToTraY(mapY.doubleValue()));
+            reloadTra();
         });
     }
     public StaticSlice(double x, double y) {
         super(x, y);
-        bus.subscribe(MapScrolledEvent.class, e-> {
+        bus.subscribe(MapTransformEvent.class, e-> {
             released();
+            reloadTra();
         });
         bus.subscribe(StageSizeChange.class, e-> {
             released();
-            setTranslateX(finalMapToTraX(mapX.doubleValue()));
-            setTranslateY(finalMapToTraY(mapY.doubleValue()));
+            reloadTra();
         });
     }
     

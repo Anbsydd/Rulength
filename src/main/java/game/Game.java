@@ -3,7 +3,6 @@ package game;
 import config.CameraConfig;
 import config.ConfigLoader;
 import data.MoveSlice;
-import data.PaneAnimation;
 import data.StaticSlice;
 import game.window.Camera;
 import game.window.Stage;
@@ -13,8 +12,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import post.EventBus;
-import post.ui.MapDraggedEvent;
-import post.ui.MapScrolledEvent;
+import post.ui.MapTransformEvent;
 import post.ui.StageSizeChange;
 import util.ImageManager;
 import util.PaneSizeManager;
@@ -131,13 +129,11 @@ public class Game {
         bus.publish(new StageSizeChange(width, height,multiX,multiY,oldWidth,oldHeight,oldMultiX,oldMultiY));
     }
     void moveWithMap(Node node){
-        PaneAnimation paneAnimation = new PaneAnimation(node);
-        bus.subscribe(MapDraggedEvent.class, (MapDraggedEvent event) -> {
+        bus.subscribe(MapTransformEvent.class, (MapTransformEvent event) -> {
             node.setTranslateX(event.offsetX());
             node.setTranslateY(event.offsetY());
-        });
-        bus.subscribe(MapScrolledEvent.class, (MapScrolledEvent event) -> {
-            paneAnimation.moveTo(event.offsetX(), event.offsetY(), event.zoom());
+            node.setScaleX(event.zoom());
+            node.setScaleY(event.zoom());
         });
     }
     public Stage getStage() {
