@@ -21,7 +21,7 @@ import static game.Game.bus;
 public class MiniMap extends StackPane {
 
     // ---- 配置 ----
-    private final MiniMapConfig config;
+    private MiniMapConfig config;
 
     // ---- 小地图尺寸 ----
     private double miniMapWidth;
@@ -160,6 +160,43 @@ public class MiniMap extends StackPane {
         viewportRect.setLayoutY(rectY);
         viewportRect.setWidth(Math.max(config.viewportMinSize, rectW));
         viewportRect.setHeight(Math.max(config.viewportMinSize, rectH));
+    }
+
+    /**
+     * 应用新配置（运行时热更新）
+     */
+    public void applyConfig(MiniMapConfig newConfig) {
+        // 更新配置引用
+        this.config = newConfig;
+
+        // 更新小地图尺寸
+        miniMapWidth = viewportWidth * config.sizeRatio;
+        miniMapHeight = viewportHeight * config.sizeRatio;
+        setMaxSize(miniMapWidth, miniMapHeight);
+        setPrefSize(miniMapWidth, miniMapHeight);
+        setMinSize(miniMapWidth, miniMapHeight);
+
+        // 更新背景样式
+        setStyle("-fx-background-color: " + config.bgColor + ";"
+                + " -fx-border-color: " + config.borderColor + ";"
+                + " -fx-border-width: " + config.borderWidth + ";"
+                + " -fx-border-radius: " + config.borderRadius + ";"
+                + " -fx-background-radius: " + config.borderRadius + ";");
+
+        // 更新缩略图
+        if (getChildren().get(0) instanceof ImageView thumb) {
+            thumb.setImage(ImageManager.load(config.thumbImagePath));
+            thumb.setOpacity(config.thumbOpacity);
+        }
+
+        // 更新视口矩形框样式
+        viewportRect.setStroke(Color.valueOf(config.viewportStrokeColor));
+        viewportRect.setStrokeWidth(config.viewportStrokeWidth);
+        viewportRect.setOpacity(config.viewportOpacity);
+
+        // 重新定位和更新
+        reposition();
+        updateViewportRect();
     }
 
     /**

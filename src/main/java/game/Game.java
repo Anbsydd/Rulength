@@ -1,9 +1,6 @@
 package game;
 
-import config.CameraConfig;
-import config.ConfigLoader;
-import config.GameConfig;
-import config.MiniMapConfig;
+import config.*;
 import event.EventBus;
 import event.MapTransformEvent;
 import event.StageSizeChange;
@@ -11,6 +8,7 @@ import game.slice.MoveSlice;
 import game.slice.StaticSlice;
 import game.window.Camera;
 import game.window.MiniMap;
+import game.window.SettingsUI;
 import game.window.Stage;
 import javafx.scene.Node;
 import javafx.scene.image.ImageView;
@@ -36,6 +34,8 @@ public class Game {
     private static final String MINIMAP_CONFIG_PATH = "assets/config/miniMapConfig.json";
     // 游戏配置
     private GameConfig gameConfig;
+    private SettingsUI settingsUI;
+    public static game.window.Stage stage_ref;
     public final double ORIGIN_SCENE_WIDTH;
     public final double ORIGIN_SCENE_HEIGHT;
     public static double multiX = 1.0;
@@ -56,12 +56,13 @@ public class Game {
         initStatic();
         initMove();
         initMiniMap();
-        // 先添加 map（底层），再添加 camera（顶层，拦截输入），最后添加小地图（最顶层）
+        // 先添加 map（底层），再添加 camera（顶层，拦截输入），最后添加小地图（最顶层），设置界面（最最顶层）
         root.getChildren().add(map);
         root.getChildren().add(camera);
         root.getChildren().add(static1);
         root.getChildren().add(move);
         root.getChildren().add(miniMap);
+        initSettings();
     }
     
     private void initStatic() {
@@ -154,5 +155,38 @@ public class Game {
     }
     public Stage getStage() {
         return stage;
+    }
+
+    private void initSettings() {
+        stage_ref = stage;
+        settingsUI = new SettingsUI();
+        PaneSizeManager.add(settingsUI, 1);
+        PaneSizeManager.set(settingsUI, root.getWidth(), root.getHeight());
+        root.getChildren().add(settingsUI);
+    }
+
+    /**
+     * 应用相机配置（运行时热更新）
+     */
+    public void applyCameraConfig(CameraConfig config) {
+        camera.use(config);
+    }
+
+    /**
+     * 应用小地图配置（运行时热更新）
+     */
+    public void applyMiniMapConfig(MiniMapConfig config) {
+        miniMap.applyConfig(config);
+    }
+
+    /**
+     * 应用窗口配置（运行时热更新）
+     */
+    public void applyStageConfig(StageConfig config) {
+        javafx.stage.Stage javafxStage = stage.getJavafxStage();
+        javafxStage.setTitle(config.title);
+        javafxStage.setWidth(config.width);
+        javafxStage.setHeight(config.height);
+        javafxStage.setFullScreenExitHint(config.fullScreenExitHint);
     }
 }

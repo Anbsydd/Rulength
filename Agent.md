@@ -26,6 +26,13 @@
 - 修改完成后简要说明变更内容
 
 ## 5. 配置注入要求
-- 配置参数提取为 Config 类 + JSON 文件（参考 CameraConfig / MiniMapConfig）
+- 尽可能将配置参数提取为 Config 类 + JSON 文件（参考 CameraConfig / MiniMapConfig）
 - 目录在assets/config下
 - 产生或改动Config类 + JSON 文件时，应当同时改动assets/config/readme.json文件
+- 你可以不用每次提取后都修改[SettingsUI.java](src/main/java/game/window/SettingsUI.java)
+
+## 6. 语言配置
+- 语言配置文件在[textLan](assets/textLan)中，所有涉及到文本的都应该储存在该目录下
+- 现在应该只使用[Simplified Chinese.json](assets/textLan/Simplified%20Chinese.json)这个文件
+- 所有文本以键值对的形式存储在该文件中，代码中仅使用键，进入游戏后将键替换成该文件中的值，如果缺失则直接使用值
+- 键的命名格式需要具体，风格统一为文件名+_+文本内容，例如：SettingsUI_Exit
