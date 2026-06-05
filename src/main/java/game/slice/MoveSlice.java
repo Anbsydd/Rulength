@@ -8,7 +8,7 @@ import javafx.scene.input.MouseEvent;
 import static game.Game.bus;
 import static game.window.Camera.zoom;
 
-public class MoveSlice extends Slice {
+public abstract class MoveSlice extends Slice {
     public MoveSlice() {
         super();
         bus.subscribe(MapTransformEvent.class, e -> {

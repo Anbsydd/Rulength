@@ -47,3 +47,18 @@
   - MiniMap.java — 添加applyConfig方法
   - SettingsUI.java — 所有文本使用TextLan.get()替代硬编码
 - 语言键命名格式: 文件名_文本内容，如 SettingsUI_Title
+
+## 对话 7: Slice JSON配置注入体系
+- 时间: 2026-06-04
+- 要求: 采用JSON文件创建Slice，通用属性(name, moved, width, height)和特殊属性分离；采用反射机制自动注入slice文件夹下所有JSON文件
+- 新增文件:
+  - assets/slice/registry.json — slice注册表，记录所有需要被加载的JSON文件
+  - SliceConfig.java — Slice配置类，通用属性(name/moved/width/height) + 特殊属性容器(extra Map)
+  - SliceInjector.java — Slice注入工具类，读取registry.json并自动加载所有slice配置
+- 修改文件:
+  - assets/slice/Test.json — 从空JSON改为包含完整测试用例(name, moved, width, height, health, attack)
+- 设计要点:
+  - 通用属性通过反射注入SliceConfig字段，特殊属性自动归入extra容器
+  - moved字段决定继承MoveSlice还是StaticSlice
+  - SliceInjector提供loadAll/get/reload等方法，支持热更新
+  - 新增slice只需在registry.json中添加文件名即可自动注入

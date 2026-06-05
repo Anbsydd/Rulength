@@ -4,8 +4,6 @@ import config.*;
 import event.EventBus;
 import event.MapTransformEvent;
 import event.StageSizeChange;
-import game.slice.MoveSlice;
-import game.slice.StaticSlice;
 import game.window.Camera;
 import game.window.MiniMap;
 import game.window.SettingsUI;
@@ -74,10 +72,10 @@ public class Game {
         static1.setPickOnBounds(false);
         moveWithMap(static1);
         // 创建Player实例
-        StaticSlice player = new StaticSlice();
-        player.setName("Player1");
-        player.onLoad();
-        static1.getChildren().add(player);
+//        StaticSlice player = new StaticSlice();
+//        player.setName("Player1");
+//        player.onLoad();
+//        static1.getChildren().add(player);
     }
     private void initMove() {
         move = new StackPane();
@@ -85,10 +83,10 @@ public class Game {
         PaneSizeManager.add(move, 1);
         PaneSizeManager.set(move, root.getWidth(), root.getHeight());
         // 创建Player实例
-        MoveSlice player = new MoveSlice();
-        player.setName("Player2");
-        player.onLoad();
-        move.getChildren().add(player);
+//        MoveSlice player = new MoveSlice();
+//        player.setName("Player2");
+//        player.onLoad();
+//        move.getChildren().add(player);
     }
     
     

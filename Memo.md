@@ -18,11 +18,16 @@ cash1/
 │   │   ├── readme.json          → 配置字段说明
 │   │   ├── settingsConfig.json  → SettingsConfig
 │   │   └── stageConfig.json     → StageConfig
+│   ├── slice/
+│   │   ├── Test.json          → SliceConfig (测试用例)
+│   │   └── registry.json      → slice注册表
+│   ├── textLan/
+│   │   └── Simplified Chinese.json
 │   └── uiImages/
 │       ├── backgrounds/ (bg.jpg, blank.png, map.png, newspaper.png, title.png)
 │       └── male/ (1~4.png)
 ├── src/main/java/
-│   ├── config/       — 配置类 + ConfigLoader
+│   ├── config/       — 配置类 + ConfigLoader + SliceInjector
 │   ├── event/        — EventBus + 事件record
 │   │   └── input/   — 鼠标输入事件包装
 │   ├── game/         — Game主类 + App入口
@@ -44,6 +49,14 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 - MiniMapConfig: sizeRatio, margin, bgColor, borderColor, borderWidth, borderRadius, thumbOpacity, thumbImagePath, viewportStrokeColor, viewportStrokeWidth, viewportOpacity, viewportMinSize
 - StageConfig: title, width, height, fullScreenExitHint
 - SettingsConfig: opacity
+
+## Slice配置注入体系
+- SliceConfig: name, moved, width, height (通用属性) + extra Map (特殊属性容器)
+- SliceInjector: 读取registry.json → 自动加载所有slice JSON → 反射注入通用属性 + 特殊属性归入extra
+- registry.json: 记录assets/slice/下所有需要加载的JSON文件名
+- 通用属性: name(String), moved(boolean,决定MoveSlice/StaticSlice), width(double), height(double)
+- 特殊属性: 存储在extra Map中，通过getIntExtra/getDoubleExtra/getBooleanExtra/getStringExtra获取
+- 支持热更新: SliceInjector.reload()重新加载所有配置
 
 ## 语言配置
 - TextLan工具类: 加载 assets/textLan/ 下的语言文件，键值对查找，缺失返回键本身
@@ -142,6 +155,7 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 ## 工具类
 - ImageManager: 图片加载+缓存（HashMap），支持classpath和文件路径，loadFit按比例缩放
 - PaneSizeManager: 订阅StageSizeChange自动调整Pane尺寸，支持倍率
+- SliceInjector: Slice配置注入工具，读取registry.json自动加载所有slice JSON，反射注入通用属性，特殊属性归入extra容器，支持热更新
 
 ## 坐标系总结
 - Camera offset: 视口中心相对地图中心的偏移（像素）

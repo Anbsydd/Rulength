@@ -7,7 +7,7 @@ import javafx.scene.input.MouseEvent;
 import static game.Game.bus;
 import static game.window.Camera.zoom;
 
-public class StaticSlice extends Slice {
+public abstract class StaticSlice extends Slice {
 
     public StaticSlice() {
         super();
