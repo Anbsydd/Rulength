@@ -1,6 +1,7 @@
 package game.slice;
 
 import event.MapTransformEvent;
+import event.StageSizeChange;
 import event.input.MouseDragged;
 import event.input.MousePressed;
 import event.input.MouseReleased;
@@ -35,6 +36,8 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
 
     public Slice() {
         super();
+        // 取消按钮默认的焦点光环和按下发光效果
+        setFocusTraversable(false);
         mapX = new SimpleDoubleProperty(0);
         mapY = new SimpleDoubleProperty(0);
         name.addListener((observable, oldValue, newValue) -> setText(newValue));
@@ -46,6 +49,9 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
         });
         bus.subscribe(MapTransformEvent.class, e -> {
             reloadTra();
+        });
+        bus.subscribe(StageSizeChange.class, e -> {
+//            setSize();
         });
     }
 

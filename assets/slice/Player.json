@@ -1,0 +1,19 @@
+{
+  "name": "你",
+  "fontSize": 20,
+  "moved": true,
+  "width": 20,
+  "height": 20,
+  "wrapText": true,
+  "mapX": 100,
+  "mapY": 100,
+  "insertTop": -4,
+  "insertLeft": 0,
+  "insertBottom": 0,
+  "insertRight": 0,
+  "opacity": 1,
+  "backgroundColor": "rgba(0,150,255,0.6)",
+  "textColor": "white",
+  "health": 100,
+  "attack": 10
+}

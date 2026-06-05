@@ -31,6 +31,7 @@ public class ConfiguredStaticSlice extends StaticSlice {
         setSize(config.width, config.height);
         bus.subscribe(StageSizeChange.class, e->{
             setSize(config.width*e.multiX(), config.height*e.multiY());
+            setSize(config.fontSize*Math.min(e.multiX(), e.multiY()));
         });
         // 设置自动换行
         setWrapText(config.wrapText);
@@ -53,6 +54,10 @@ public class ConfiguredStaticSlice extends StaticSlice {
         style.append("-fx-text-fill: ").append(config.textColor).append(";");
         style.append("-fx-padding: ").append((int) config.insertTop).append(" ").append((int) config.insertRight).append(" ").append((int) config.insertBottom).append(" ").append((int) config.insertLeft).append(";");
         style.append("-fx-font-size: ").append((int) config.fontSize).append("px;");
+        // 取消按钮默认的聚焦光环和按下发光效果
+        style.append("-fx-focus-color: transparent;");
+        style.append("-fx-faint-focus-color: transparent;");
+        style.append("-fx-highlight-fill: transparent;");
         setStyle(style.toString());
     }
     
