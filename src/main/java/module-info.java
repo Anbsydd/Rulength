@@ -9,6 +9,7 @@ module Rulength {
     exports event.input;
     exports game;
     exports game.slice;
+    exports game.time;
     exports game.window;
     exports config;
     exports util;

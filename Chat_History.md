@@ -164,3 +164,35 @@
   - methods层记录触发器→方法名的映射（如hit→attack），暂时不实现调用逻辑
   - event层记录每游戏刻更新事件，为空或没有则不需要更新，通过hasEvent()判断
   - 未来可扩展：新增渲染层（如image层）只需在JSON中添加嵌套对象，在SliceInjector中添加对应解析逻辑
+
+## 对话 20: 创建碰撞检测工具类 CollisionUtil
+- 时间: 2026-06-05
+- 要求: 创建碰撞检测工具类，支持两阶段检测（AABB矩形预判→像素级Alpha通道精确检测），兼容MoveSlice和StaticSlice的不同坐标体系
+- 新增文件:
+  - util/CollisionUtil.java — 碰撞检测工具类
+- 修改文件:
+  - Memo.md — 新增CollisionUtil说明（因文件丢失已重建）
+- 设计要点:
+  - 阶段1 — AABB矩形预判：计算场景坐标系包围盒，不相交直接false快速排除
+  - 阶段2 — 像素级精确检测：仅当矩形相交且slice注册了PNG像素数据时执行
+  - 纯按钮/文本slice（无像素数据）：矩形相交直接判定碰撞
+  - 坐标兼容：通过localToScene/sceneToLocal自动处理MoveSlice（包含zoom/offset）和StaticSlice（仅multiX/Y）的变换差异
+  - 像素缓存：PixelCache存储PNG的boolean[] alpha掩码，只加载一次，重复使用
+  - ALPHA_THRESHOLD=0.1，可根据需要调整
+  - 预留扩展点：getPixelData()方法目前返回null（图片层未实现），未来从SliceConfig获取图片路径自动匹配缓存
+
+## 对话 21: 创建 TimeSystem 游戏刻时钟系统
+- 时间: 2026-06-05
+- 要求: 建立游戏刻机制，每秒60游戏刻（1s=60tick），暂不接入其他系统
+- 新增文件:
+  - event/TickEvent.java — 游戏刻事件 record，携带 tickCount 总刻数
+  - game/time/TimeSystem.java — 游戏刻时钟系统
+- 修改文件:
+  - module-info.java — 新增 exports game.time
+- 设计要点:
+  - 基于 AnimationTimer 实现，使用累积时间法（accumulated）保证固定频率
+  - 与 Camera 渲染循环独立运行：Camera 驱动画面插值，TimeSystem 驱动逻辑帧
+  - 每 tick 通过 EventBus.publish(new TickEvent(tickCount)) 发布
+  - 其他系统通过 bus.subscribe(TickEvent.class, e -> { ... }) 订阅
+  - 提供 start()/stop()/reset() 生命周期控制，FPS 统计（默认注释）
+  - 目标 60 tick/s，每刻间隔约 16.67ms
