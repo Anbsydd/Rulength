@@ -3,6 +3,12 @@
   "moved": false,
   "width": 200,
   "height": 50,
+  "opacity": 0.8,
+  "borderColor": "blue",
+  "borderWidth": 0,
+  "borderRadius": 0,
+  "backgroundColor": "rgba(0,150,255,0.6)",
+  "textColor": "white",
   "health": 100,
   "attack": 10
 }

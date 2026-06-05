@@ -29,8 +29,24 @@ public class ConfiguredStaticSlice extends StaticSlice {
         bus.subscribe(StageSizeChange.class, e->{
             setSize(config.width*e.multiX(), config.height*e.multiY());
         });
-        // 设置样式：带边框和背景色，便于可视化测试
-        setStyle("-fx-background-color: rgba(255,150,0,0.6); -fx-border-color: orange; -fx-border-width: 2; -fx-text-fill: white;");
+        // 设置透明度
+        setOpacity(config.opacity);
+        // 设置clip圆角裁剪
+        if (config.borderRadius > 0) {
+            javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle(config.width, config.height);
+            clip.setArcWidth(config.borderRadius * 2);
+            clip.setArcHeight(config.borderRadius * 2);
+            setClip(clip);
+        }
+        // 构建CSS样式
+        StringBuilder style = new StringBuilder();
+        style.append("-fx-background-color: ").append(config.backgroundColor).append(";");
+        style.append("-fx-border-color: ").append(config.borderColor).append(";");
+        style.append("-fx-border-width: ").append((int) config.borderWidth).append(";");
+        style.append("-fx-border-radius: ").append((int) config.borderRadius).append(";");
+        style.append("-fx-background-radius: ").append((int) config.borderRadius).append(";");
+        style.append("-fx-text-fill: ").append(config.textColor).append(";");
+        setStyle(style.toString());
     }
     
     /**

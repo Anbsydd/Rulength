@@ -17,6 +17,18 @@ public class SliceConfig {
     public double width;
     /** 高度 */
     public double height;
+    /** 透明度，0=全透明，1=不透明 */
+    public double opacity = 1.0;
+    /** 边框颜色（CSS颜色值） */
+    public String borderColor = "transparent";
+    /** 边框宽度（像素） */
+    public double borderWidth = 0;
+    /** 边框圆角（像素） */
+    public double borderRadius = 0;
+    /** 背景颜色（CSS颜色值） */
+    public String backgroundColor = "transparent";
+    /** 文字颜色（CSS颜色值） */
+    public String textColor = "black";
 
     /** 特殊属性容器，存储每种Slice独有的属性 */
     public Map<String, Object> extra = new HashMap<>();

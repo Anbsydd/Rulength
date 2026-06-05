@@ -23,7 +23,10 @@ public class SliceInjector {
     private static final Map<String, SliceConfig> configCache = new LinkedHashMap<>();
 
     /** SliceConfig中定义的通用属性字段名集合，用于区分通用属性和特殊属性 */
-    private static final Set<String> BASE_FIELDS = Set.of("name", "moved", "width", "height");
+    private static final Set<String> BASE_FIELDS = Set.of(
+            "name", "moved", "width", "height",
+            "opacity", "borderColor", "borderWidth", "borderRadius", "backgroundColor", "textColor"
+    );
 
     /**
      * 加载所有注册的slice配置
