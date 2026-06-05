@@ -1,8 +1,10 @@
 {
   "name": "TestSlice",
   "moved": false,
-  "width": 200,
+  "width": 50,
   "height": 50,
+  "mapX": 100,
+  "mapY": 100,
   "opacity": 0.8,
   "borderColor": "blue",
   "borderWidth": 0,

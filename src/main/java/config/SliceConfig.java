@@ -17,6 +17,10 @@ public class SliceConfig {
     public double width;
     /** 高度 */
     public double height;
+    /** 地图X坐标 */
+    public double mapX = 0;
+    /** 地图Y坐标 */
+    public double mapY = 0;
     /** 透明度，0=全透明，1=不透明 */
     public double opacity = 1.0;
     /** 边框颜色（CSS颜色值） */

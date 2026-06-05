@@ -25,6 +25,9 @@ public class ConfiguredStaticSlice extends StaticSlice {
     private void applyConfig() {
         // 设置名称
         setName(config.name);
+        // 设置地图坐标
+        setMapX(config.mapX);
+        setMapY(config.mapY);
         setSize(config.width, config.height);
         bus.subscribe(StageSizeChange.class, e->{
             setSize(config.width*e.multiX(), config.height*e.multiY());

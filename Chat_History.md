@@ -62,3 +62,15 @@
   - moved字段决定继承MoveSlice还是StaticSlice
   - SliceInjector提供loadAll/get/reload等方法，支持热更新
   - 新增slice只需在registry.json中添加文件名即可自动注入
+
+## 对话 11: SliceConfig增加mapX/mapY基础属性
+- 时间: 2026-06-05
+- 要求: 增加基础属性mapX/mapY，注入时设置到Slice的mapX/mapY
+- 修改文件:
+  - SliceConfig.java — 新增mapX(double,默认0)和mapY(double,默认0)基础属性
+  - SliceInjector.java — BASE_FIELDS集合新增mapX、mapY
+  - ConfiguredMoveSlice.java — applyConfig中添加setMapX(config.mapX)/setMapY(config.mapY)
+  - ConfiguredStaticSlice.java — 同上
+- 设计要点:
+  - Slice类本身已有mapX/mapY的DoubleProperty及setMapX/setMapY方法
+  - SliceConfig的mapX/mapY通过ConfiguredSlice注入到Slice的mapX/mapY，实现JSON配置地图坐标
