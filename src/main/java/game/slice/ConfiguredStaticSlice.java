@@ -1,6 +1,9 @@
 package game.slice;
 
 import config.SliceConfig;
+import event.StageSizeChange;
+
+import static game.Game.bus;
 
 /**
  * 基于SliceConfig配置创建的静态Slice
@@ -22,12 +25,14 @@ public class ConfiguredStaticSlice extends StaticSlice {
     private void applyConfig() {
         // 设置名称
         setName(config.name);
-        // 设置尺寸
-        setPrefSize(config.width, config.height);
+        setSize(config.width, config.height);
+        bus.subscribe(StageSizeChange.class, e->{
+            setSize(config.width*e.multiX(), config.height*e.multiY());
+        });
         // 设置样式：带边框和背景色，便于可视化测试
         setStyle("-fx-background-color: rgba(255,150,0,0.6); -fx-border-color: orange; -fx-border-width: 2; -fx-text-fill: white;");
     }
-
+    
     /**
      * 获取关联的SliceConfig
      */

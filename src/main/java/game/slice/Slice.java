@@ -116,7 +116,13 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
     public void setSize(double size) {
         TextSized.super.setSize(size);
     }
-
+    
+    protected void setSize(double width, double height) {
+        // 设置尺寸（允许超过屏幕限制）
+        setPrefSize(width, height);
+        setMaxSize(width, height);
+        setMinSize(width, height);
+    }
     public <T extends Event> void addAndRegisterEventFilter(EventType<T> var1, EventHandler<? super T> var2) {
         addEventFilter(var1, var2);
         register(() -> removeEventFilter(var1, var2));
