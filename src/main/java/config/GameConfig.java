@@ -16,6 +16,10 @@ public class GameConfig {
     public String mapImagePath;
     /** 开始菜单背景图片路径 */
     public String startMenuImagePath;
+    /** 渲染帧率上限（需显示器支持，默认60） */
+    public int maxFrameRate = 60;
+    /** 是否开启垂直同步（默认true，关闭可能画面撕裂但帧率更高） */
+    public boolean vSync = true;
 
     public GameConfig() {
     }

@@ -120,3 +120,16 @@
   - 按文件名排序后写入registry.json的slices数组
   - 使用Jackson美化格式输出
   - 提供generate()方法供代码调用，main()方法可直接运行
+
+## 对话 17: 渲染帧率上限与垂直同步配置
+- 时间: 2026-06-05
+- 要求: 新增配置控制帧率上限和垂直同步，突破JavaFX 60fps限制
+- 修改文件:
+  - GameConfig.java — 新增maxFrameRate(int,默认60)和vSync(boolean,默认true)
+  - App.java — 添加main方法，在launch()前读取配置设置prism.refreshRate和prism.vsync系统属性
+  - gameConfig.json — 添加maxFrameRate和vSync配置项
+- 设计要点:
+  - prism.refreshRate和prism.vsync必须在JavaFX初始化前设置
+  - 在App.main()中launch()之前读取配置并System.setProperty
+  - 配置读取失败时回退到默认值(60Hz, vSync=true)
+  - 突破60fps需显示器支持高刷新率+vSync关闭

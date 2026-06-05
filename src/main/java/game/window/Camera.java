@@ -67,7 +67,7 @@ public class Camera extends StackPane {
     private static Camera instance;
 
     // ---- 动画计时器 ----
-    private final AnimationTimer renderLoop;
+    private AnimationTimer renderLoop;
 
     public Camera(CameraConfig config, double width, double height) {
         instance = this;
@@ -82,15 +82,28 @@ public class Camera extends StackPane {
         initCameraPane();
         initInputHandlers();
         initViewportListener();
-
-        // 启动渲染循环：每帧插值并发布事件
-        renderLoop = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                lerpAndPublish();
-            }
-        };
-        renderLoop.start();
+        if (true) {
+            // 启动渲染循环：每帧插值并发布事件
+            renderLoop = new AnimationTimer() {
+                private long frameCount = 0;
+                private long lastFpsTime = System.nanoTime();
+                
+                @Override
+                public void handle(long now) {
+                    lerpAndPublish();
+                    // FPS 统计：每秒打印一次
+                    frameCount++;
+                    long elapsed = now - lastFpsTime;
+                    if (elapsed >= 1_000_000_000L) {
+                        double fps = frameCount * 1_000_000_000.0 / elapsed;
+//                        System.out.printf("FPS: %.1f%n", fps);
+                        frameCount = 0;
+                        lastFpsTime = now;
+                    }
+                }
+            };
+            renderLoop.start();
+        }
     }
 
     public void use(CameraConfig config) {

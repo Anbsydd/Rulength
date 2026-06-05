@@ -4,5 +4,7 @@
   "keepAliveSeconds" : 60,
   "queueCapacity" : 100,
   "mapImagePath" : "uiImages/backgrounds/map.png",
-  "startMenuImagePath" : "uiImages/backgrounds/bg.jpg"
+  "startMenuImagePath" : "uiImages/backgrounds/bg.jpg",
+  "maxFrameRate" : 60,
+  "vSync" : true
 }

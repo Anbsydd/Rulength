@@ -58,6 +58,7 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 - 特殊属性: 存储在extra Map中，通过getIntExtra/getDoubleExtra/getBooleanExtra/getStringExtra获取
 - 支持热更新: SliceInjector.reload()重新加载所有配置
 - SliceRegistryGenerator: 自动扫描assets/slice/下所有.json文件，生成registry.json（排除自身，按文件名排序）
+- 渲染帧率配置: GameConfig.maxFrameRate(默认60) + vSync(默认true)，App.main()在launch前设置prism.refreshRate和prism.vsync系统属性
 
 ## 语言配置
 - TextLan工具类: 加载 assets/textLan/ 下的语言文件，键值对查找，缺失返回键本身

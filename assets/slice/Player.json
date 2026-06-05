@@ -4,7 +4,7 @@
   "moved": true,
   "width": 20,
   "height": 20,
-  "wrapText": true,
+  "wrapText": false,
   "mapX": 100,
   "mapY": 100,
   "insertTop": -4,
