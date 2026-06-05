@@ -25,7 +25,8 @@ public class SliceInjector {
     /** SliceConfig中定义的通用属性字段名集合，用于区分通用属性和特殊属性 */
     private static final Set<String> BASE_FIELDS = Set.of(
             "name", "moved", "width", "height", "mapX", "mapY",
-            "opacity", "borderColor", "borderWidth", "borderRadius", "backgroundColor", "textColor"
+            "opacity", "borderColor", "borderWidth", "borderRadius", "backgroundColor", "textColor",
+            "insertTop", "insertRight", "insertBottom", "insertLeft", "fontSize", "wrapText"
     );
 
     /**

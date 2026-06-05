@@ -54,7 +54,7 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 - SliceConfig: name, moved, width, height (通用属性) + extra Map (特殊属性容器)
 - SliceInjector: 读取registry.json → 自动加载所有slice JSON → 反射注入通用属性 + 特殊属性归入extra
 - registry.json: 记录assets/slice/下所有需要加载的JSON文件名
-- 通用属性: name(String), moved(boolean,决定MoveSlice/StaticSlice), width(double), height(double), mapX(double,默认0), mapY(double,默认0), opacity(double,默认1.0), borderColor(String,默认transparent), borderWidth(double,默认0), borderRadius(double,默认0), backgroundColor(String,默认transparent), textColor(String,默认black)
+- 通用属性: name(String), moved(boolean,决定MoveSlice/StaticSlice), width(double), height(double), mapX(double,默认0), mapY(double,默认0), opacity(double,默认1.0), borderColor(String,默认transparent), borderWidth(double,默认0), borderRadius(double,默认0), backgroundColor(String,默认transparent), textColor(String,默认black), insertTop(double,默认0), insertRight(double,默认0), insertBottom(double,默认0), insertLeft(double,默认0), fontSize(double,默认12), wrapText(boolean,默认false)
 - 特殊属性: 存储在extra Map中，通过getIntExtra/getDoubleExtra/getBooleanExtra/getStringExtra获取
 - 支持热更新: SliceInjector.reload()重新加载所有配置
 

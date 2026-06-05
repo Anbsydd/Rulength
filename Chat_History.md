@@ -74,3 +74,38 @@
 - 设计要点:
   - Slice类本身已有mapX/mapY的DoubleProperty及setMapX/setMapY方法
   - SliceConfig的mapX/mapY通过ConfiguredSlice注入到Slice的mapX/mapY，实现JSON配置地图坐标
+
+## 对话 12: SliceConfig增加insert内边距属性
+- 时间: 2026-06-05
+- 要求: 新增基础属性insert，调整文字距离边框的边距，设置为四个属性
+- 修改文件:
+  - SliceConfig.java — 新增4个基础属性：insertTop, insertRight, insertBottom, insertLeft（double，默认0）
+  - SliceInjector.java — BASE_FIELDS集合新增4个字段名
+  - ConfiguredMoveSlice.java — CSS样式中添加-fx-padding，使用四个insert属性
+  - ConfiguredStaticSlice.java — 同上
+- 设计要点:
+  - 使用JavaFX CSS的-fx-padding属性，格式为"上 右 下 左"
+  - 四个方向独立控制，默认均为0
+
+## 对话 13: SliceConfig增加fontSize字体大小属性
+- 时间: 2026-06-05
+- 要求: 新增基础属性fontSize字体大小
+- 修改文件:
+  - SliceConfig.java — 新增fontSize(double,默认12)基础属性
+  - SliceInjector.java — BASE_FIELDS集合新增fontSize
+  - ConfiguredMoveSlice.java — CSS样式中添加-fx-font-size
+  - ConfiguredStaticSlice.java — 同上
+- 设计要点:
+  - 使用JavaFX CSS的-fx-font-size属性，单位px
+
+## 对话 14: SliceConfig增加wrapText自动换行属性
+- 时间: 2026-06-05
+- 要求: 新增字段控制文本自动换行行为
+- 修改文件:
+  - SliceConfig.java — 新增wrapText(boolean,默认false)基础属性
+  - SliceInjector.java — BASE_FIELDS集合新增wrapText
+  - ConfiguredMoveSlice.java — applyConfig中添加setWrapText(config.wrapText)
+  - ConfiguredStaticSlice.java — 同上
+- 设计要点:
+  - Slice继承Button→Labeled，Labeled自带setWrapText方法
+  - wrapText=true时文本超出宽度自动换行，false则截断或溢出

@@ -33,6 +33,18 @@ public class SliceConfig {
     public String backgroundColor = "transparent";
     /** 文字颜色（CSS颜色值） */
     public String textColor = "black";
+    /** 文字距边框上边距（像素） */
+    public double insertTop = 0;
+    /** 文字距边框右边距（像素） */
+    public double insertRight = 0;
+    /** 文字距边框下边距（像素） */
+    public double insertBottom = 0;
+    /** 文字距边框左边距（像素） */
+    public double insertLeft = 0;
+    /** 字体大小（像素） */
+    public double fontSize = 12;
+    /** 是否自动换行，true=文本超出宽度时自动换行 */
+    public boolean wrapText = false;
 
     /** 特殊属性容器，存储每种Slice独有的属性 */
     public Map<String, Object> extra = new HashMap<>();

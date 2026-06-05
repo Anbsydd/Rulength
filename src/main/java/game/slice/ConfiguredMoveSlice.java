@@ -32,6 +32,8 @@ public class ConfiguredMoveSlice extends MoveSlice {
         bus.subscribe(StageSizeChange.class,e->{
             setSize(config.width*e.multiX(), config.height*e.multiY());
         });
+        // 设置自动换行
+        setWrapText(config.wrapText);
         // 设置透明度
         setOpacity(config.opacity);
         // 设置clip圆角裁剪
@@ -49,6 +51,8 @@ public class ConfiguredMoveSlice extends MoveSlice {
         style.append("-fx-border-radius: ").append((int) config.borderRadius).append(";");
         style.append("-fx-background-radius: ").append((int) config.borderRadius).append(";");
         style.append("-fx-text-fill: ").append(config.textColor).append(";");
+        style.append("-fx-padding: ").append((int) config.insertTop).append(" ").append((int) config.insertRight).append(" ").append((int) config.insertBottom).append(" ").append((int) config.insertLeft).append(";");
+        style.append("-fx-font-size: ").append((int) config.fontSize).append("px;");
         setStyle(style.toString());
     }
     
