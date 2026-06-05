@@ -1,19 +1,30 @@
 {
   "name": "你",
-  "fontSize": 20,
   "moved": true,
-  "width": 20,
-  "height": 20,
-  "wrapText": false,
   "mapX": 100,
   "mapY": 100,
-  "insertTop": -4,
-  "insertLeft": 0,
-  "insertBottom": 0,
-  "insertRight": 0,
   "opacity": 1,
-  "backgroundColor": "rgba(0,150,255,0.6)",
-  "textColor": "white",
-  "health": 100,
-  "attack": 10
+  "text": {
+    "fontSize": 20,
+    "width": 30,
+    "height": 30,
+    "wrapText": false,
+    "insertTop": -4,
+    "insertLeft": 0,
+    "insertBottom": 0,
+    "insertRight": 0,
+    "opacity": 1,
+    "backgroundColor": "rgba(0,150,255,0.6)",
+    "textColor": "white"
+  },
+  "attributes": {
+    "health": 100,
+    "attack": 10
+  },
+  "methods": {
+    "hit": "attack"
+  },
+  "event": {
+  
+  }
 }

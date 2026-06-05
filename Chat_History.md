@@ -133,3 +133,17 @@
   - 在App.main()中launch()之前读取配置并System.setProperty
   - 配置读取失败时回退到默认值(60Hz, vSync=true)
   - 突破60fps需显示器支持高刷新率+vSync关闭
+
+## 对话 18: 修复窗口放大后边框消失问题
+- 时间: 2026-06-05
+- 问题: 窗口放大后，Slice的width/height随窗口缩放变化，但边框部分消失
+- 原因:
+  1. clip裁剪矩形在初始化时以config.width/height创建，窗口放大后setSize更新了按钮尺寸，但clip尺寸未同步更新，导致超出原始clip范围的内容被裁剪掉
+  2. CSS样式中的borderWidth、borderRadius、padding、fontSize等是固定像素值，未随窗口缩放更新
+- 修改文件:
+  - ConfiguredStaticSlice.java — 将clip保存为成员变量；在StageSizeChange事件中同步更新clip的width/height/arcWidth/arcHeight；提取applyStyle方法，在窗口变化时重新应用缩放后的CSS样式
+  - ConfiguredMoveSlice.java — 同上
+- 设计要点:
+  - clip裁剪矩形必须与按钮尺寸同步更新，否则放大部分会被裁掉
+  - borderRadius、borderWidth、padding、fontSize等像素值需乘以缩放比例scale=Math.min(multiX, multiY)
+  - applyStyle(1,1)用于初始化，applyStyle(multiX, multiY)用于窗口变化时动态更新
