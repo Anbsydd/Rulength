@@ -55,6 +55,7 @@ public class Game {
         initCamera();
         initStatic();
         initMove();
+        initSlices();
         initMiniMap();
         // 先添加 map（底层），再添加 camera（顶层，拦截输入），最后添加小地图（最顶层），设置界面（最最顶层）
         root.getChildren().add(map);
@@ -71,22 +72,34 @@ public class Game {
         PaneSizeManager.set(static1, root.getWidth(), root.getHeight());
         static1.setPickOnBounds(false);
         moveWithMap(static1);
-        // 创建Player实例
-//        StaticSlice player = new StaticSlice();
-//        player.setName("Player1");
-//        player.onLoad();
-//        static1.getChildren().add(player);
     }
     private void initMove() {
         move = new StackPane();
         move.setPickOnBounds(false);
         PaneSizeManager.add(move, 1);
         PaneSizeManager.set(move, root.getWidth(), root.getHeight());
-        // 创建Player实例
-//        MoveSlice player = new MoveSlice();
-//        player.setName("Player2");
-//        player.onLoad();
-//        move.getChildren().add(player);
+    }
+
+    /**
+     * 通过SliceInjector加载所有slice配置，根据moved字段创建对应的Slice实例
+     * moved=true → ConfiguredMoveSlice（跟随地图移动）
+     * moved=false → ConfiguredStaticSlice（固定位置）
+     */
+    private void initSlices() throws Exception {
+        java.util.List<config.SliceConfig> configs = config.SliceInjector.loadAll();
+        for (config.SliceConfig cfg : configs) {
+            game.slice.Slice slice;
+            if (cfg.moved) {
+                slice = new game.slice.ConfiguredMoveSlice(cfg);
+                move.getChildren().add(slice);
+            } else {
+                slice = new game.slice.ConfiguredStaticSlice(cfg);
+                static1.getChildren().add(slice);
+            }
+            slice.onLoad();
+            // 打印加载信息，便于调试
+            System.out.println("SliceInjector: 已加载 Slice [" + cfg.name + "] moved=" + cfg.moved + " extra=" + cfg.extra);
+        }
     }
     
     

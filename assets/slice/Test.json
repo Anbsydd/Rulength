@@ -1,7 +1,7 @@
 {
   "name": "TestSlice",
   "moved": true,
-  "width": 50,
+  "width": 1000,
   "height": 50,
   "health": 100,
   "attack": 10
