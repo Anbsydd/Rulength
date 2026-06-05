@@ -109,3 +109,14 @@
 - 设计要点:
   - Slice继承Button→Labeled，Labeled自带setWrapText方法
   - wrapText=true时文本超出宽度自动换行，false则截断或溢出
+
+## 对话 15: 新增SliceRegistryGenerator工具类
+- 时间: 2026-06-05
+- 要求: 在util里新增工具程序类，自动注册assets/slice里所有slice到registry
+- 修改文件:
+  - util/SliceRegistryGenerator.java — 新增工具类
+- 设计要点:
+  - 扫描assets/slice/下所有.json文件（排除registry.json自身）
+  - 按文件名排序后写入registry.json的slices数组
+  - 使用Jackson美化格式输出
+  - 提供generate()方法供代码调用，main()方法可直接运行

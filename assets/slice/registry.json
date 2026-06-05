@@ -1,5 +1,3 @@
 {
-  "slices": [
-    "Test.json"
-  ]
+  "slices" : [ "Player.json", "Test.json" ]
 }
