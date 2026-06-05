@@ -17,6 +17,22 @@ public class SliceConfig {
     public double width;
     /** 高度 */
     public double height;
+    /** 地图X坐标 */
+    public double mapX = 0;
+    /** 地图Y坐标 */
+    public double mapY = 0;
+    /** 透明度，0=全透明，1=不透明 */
+    public double opacity = 1.0;
+    /** 边框颜色（CSS颜色值） */
+    public String borderColor = "transparent";
+    /** 边框宽度（像素） */
+    public double borderWidth = 0;
+    /** 边框圆角（像素） */
+    public double borderRadius = 0;
+    /** 背景颜色（CSS颜色值） */
+    public String backgroundColor = "transparent";
+    /** 文字颜色（CSS颜色值） */
+    public String textColor = "black";
 
     /** 特殊属性容器，存储每种Slice独有的属性 */
     public Map<String, Object> extra = new HashMap<>();
@@ -83,6 +99,10 @@ public class SliceConfig {
 
     @Override
     public String toString() {
-        return "SliceConfig{name='" + name + "', moved=" + moved + ", width=" + width + ", height=" + height + ", extra=" + extra + "}";
+        return "SliceConfig{name='" + name + "', moved=" + moved + ", width=" + width + ", height=" + height
+                + ", mapX=" + mapX + ", mapY=" + mapY
+                + ", opacity=" + opacity + ", borderColor='" + borderColor + "', borderWidth=" + borderWidth
+                + ", borderRadius=" + borderRadius + ", backgroundColor='" + backgroundColor + "', textColor='" + textColor + "'"
+                + ", extra=" + extra + "}";
     }
 }

@@ -1,6 +1,7 @@
 package game.slice;
 
 import config.SliceConfig;
+import javafx.scene.shape.Rectangle;
 
 /**
  * 基于SliceConfig配置创建的静态Slice
@@ -20,12 +21,35 @@ public class ConfiguredStaticSlice extends StaticSlice {
      * 应用SliceConfig中的配置到当前Slice
      */
     private void applyConfig() {
-        // 设置名称
-        setName(config.name);
-        // 设置尺寸
+        // 设置尺寸（允许超过屏幕限制）
         setPrefSize(config.width, config.height);
-        // 设置样式：带边框和背景色，便于可视化测试
-        setStyle("-fx-background-color: rgba(255,150,0,0.6); -fx-border-color: orange; -fx-border-width: 2; -fx-text-fill: white;");
+        setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        setMinSize(0, 0);
+        // 设置地图坐标
+        setMapX(config.mapX);
+        setMapY(config.mapY);
+        // 设置透明度
+        setOpacity(config.opacity);
+        // 设置clip圆角裁剪
+        if (config.borderRadius > 0) {
+            Rectangle clip = new Rectangle(config.width, config.height);
+            clip.setArcWidth(config.borderRadius * 2);
+            clip.setArcHeight(config.borderRadius * 2);
+            setClip(clip);
+        }
+        // 构建CSS样式
+        StringBuilder style = new StringBuilder();
+        style.append("-fx-background-color: ").append(config.backgroundColor).append(";");
+        style.append("-fx-border-color: ").append(config.borderColor).append(";");
+        style.append("-fx-border-width: ").append((int) config.borderWidth).append(";");
+        style.append("-fx-border-radius: ").append((int) config.borderRadius).append(";");
+        style.append("-fx-background-radius: ").append((int) config.borderRadius).append(";");
+        style.append("-fx-text-fill: ").append(config.textColor).append(";");
+        style.append("-fx-alignment: center;");
+        style.append("-fx-content-display: center;");
+        setStyle(style.toString());
+        // 设置名称（在setStyle之后，确保文本显示）
+        setName(config.name);
     }
 
     /**

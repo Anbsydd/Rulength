@@ -51,12 +51,25 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 - SettingsConfig: opacity
 
 ## Slice配置注入体系
-- SliceConfig: name, moved, width, height (通用属性) + extra Map (特殊属性容器)
+- SliceConfig: 通用属性 + extra Map (特殊属性容器)
 - SliceInjector: 读取registry.json → 自动加载所有slice JSON → 反射注入通用属性 + 特殊属性归入extra
 - registry.json: 记录assets/slice/下所有需要加载的JSON文件名
-- 通用属性: name(String), moved(boolean,决定MoveSlice/StaticSlice), width(double), height(double)
+- 通用属性:
+  - name(String): Slice名称
+  - moved(boolean): 决定MoveSlice/StaticSlice
+  - width(double): 宽度，允许超过屏幕限制
+  - height(double): 高度，允许超过屏幕限制
+  - mapX(double): 地图X坐标，默认0
+  - mapY(double): 地图Y坐标，默认0
+  - opacity(double): 透明度，0=全透明，1=不透明，默认1.0
+  - borderColor(String): 边框颜色（CSS颜色值），默认transparent
+  - borderWidth(double): 边框宽度（像素），默认0
+  - borderRadius(double): 边框圆角（像素），默认0
+  - backgroundColor(String): 背景颜色（CSS颜色值），默认transparent
+  - textColor(String): 文字颜色（CSS颜色值），默认black
 - 特殊属性: 存储在extra Map中，通过getIntExtra/getDoubleExtra/getBooleanExtra/getStringExtra获取
 - 支持热更新: SliceInjector.reload()重新加载所有配置
+- ConfiguredMoveSlice/ConfiguredStaticSlice: 根据SliceConfig自动构建CSS样式和clip裁剪
 
 ## 语言配置
 - TextLan工具类: 加载 assets/textLan/ 下的语言文件，键值对查找，缺失返回键本身
@@ -141,6 +154,14 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 
 ### Player (extends MoveSlice)
 - 简单子类，初始位置(0,0)
+
+### ConfiguredMoveSlice (extends MoveSlice)
+- 基于SliceConfig配置创建的可移动Slice，moved=true时使用
+- applyConfig(): 根据SliceConfig设置名称、尺寸（允许超屏幕）、透明度、clip圆角裁剪、CSS样式
+
+### ConfiguredStaticSlice (extends StaticSlice)
+- 基于SliceConfig配置创建的静态Slice，moved=false时使用
+- applyConfig(): 同ConfiguredMoveSlice，样式逻辑一致
 
 ## 事件列表
 | 事件 | 字段 | 发布者 | 订阅者 |

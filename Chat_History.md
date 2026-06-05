@@ -62,3 +62,30 @@
   - moved字段决定继承MoveSlice还是StaticSlice
   - SliceInjector提供loadAll/get/reload等方法，支持热更新
   - 新增slice只需在registry.json中添加文件名即可自动注入
+
+## 对话 8: Slice基础属性扩展
+- 时间: 2026-06-04
+- 要求: 让宽高可以超过屏幕限制，增加基础属性：透明度、边框相关设置、颜色相关设置
+- 修改文件:
+  - SliceConfig.java — 新增6个基础属性：opacity(透明度)、borderColor(边框颜色)、borderWidth(边框宽度)、borderRadius(边框圆角)、backgroundColor(背景颜色)、textColor(文字颜色)
+  - SliceInjector.java — BASE_FIELDS集合新增6个字段名
+  - ConfiguredMoveSlice.java — 使用新属性构建CSS样式，设置clip圆角裁剪，setMaxSize允许超屏幕
+  - ConfiguredStaticSlice.java — 同上
+  - Test.json — 添加新增属性的测试值
+- 设计要点:
+  - 新增基础属性均有默认值（opacity=1.0, borderColor/backgroundColor="transparent", borderWidth/borderRadius=0, textColor="black"），旧JSON无需修改即可兼容
+  - borderRadius同时设置CSS的border-radius和background-radius，以及JavaFX的Rectangle clip实现圆角裁剪
+  - setMaxSize(Double.MAX_VALUE)允许宽高超过屏幕限制
+
+## 对话 9: Slice增加mapX/mapY属性及文本显示修复
+- 时间: 2026-06-04
+- 要求: 增加基础属性mapX/mapY，修复slice中文本不显示的问题
+- 修改文件:
+  - SliceConfig.java — 新增mapX/mapY基础属性（默认值0）
+  - SliceInjector.java — BASE_FIELDS集合新增mapX/mapY
+  - ConfiguredMoveSlice.java — 添加setMapX/setMapY调用；将setName移到setStyle之后；添加-fx-alignment和-fx-content-display样式
+  - ConfiguredStaticSlice.java — 同上
+  - Test.json — 添加mapX=100, mapY=100
+- 修复要点:
+  - 文本不显示原因：setName在setStyle之前调用，setStyle覆盖样式后文本渲染被影响
+  - 修复方案：将setName移到setStyle之后调用，并添加-fx-alignment:center和-fx-content-display:center确保文本居中显示
