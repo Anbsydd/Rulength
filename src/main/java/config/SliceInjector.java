@@ -9,7 +9,12 @@ import java.util.*;
 /**
  * Slice注入工具类
  * 负责读取registry.json中注册的所有slice JSON文件，
- * 自动扫描并加载为SliceConfig对象，支持反射机制动态注入属性
+ * 自动扫描并加载为SliceConfig对象，支持分层结构注入：
+ * - 外层字段：name, moved, mapX, mapY, opacity
+ * - text层：嵌套对象，映射到TextConfig
+ * - attributes层：嵌套对象，映射到attributes Map
+ * - methods层：嵌套对象，映射到methods Map
+ * - event层：嵌套对象，映射到event Map
  */
 public class SliceInjector {
 
@@ -22,11 +27,9 @@ public class SliceInjector {
     /** 已加载的SliceConfig缓存，key为JSON文件名（不含扩展名） */
     private static final Map<String, SliceConfig> configCache = new LinkedHashMap<>();
 
-    /** SliceConfig中定义的通用属性字段名集合，用于区分通用属性和特殊属性 */
-    private static final Set<String> BASE_FIELDS = Set.of(
-            "name", "moved", "width", "height", "mapX", "mapY",
-            "opacity", "borderColor", "borderWidth", "borderRadius", "backgroundColor", "textColor",
-            "insertTop", "insertRight", "insertBottom", "insertLeft", "fontSize", "wrapText"
+    /** SliceConfig外层字段名集合，用于区分外层字段和嵌套层 */
+    private static final Set<String> OUTER_FIELDS = Set.of(
+            "name", "moved", "mapX", "mapY", "opacity"
     );
 
     /**
@@ -56,8 +59,12 @@ public class SliceInjector {
 
     /**
      * 加载单个slice配置文件
-     * 通用属性（name, moved, width, height）直接注入SliceConfig字段，
-     * 其余属性归入extra容器作为特殊属性
+     * 分层结构：
+     * - 外层字段（name, moved, mapX, mapY, opacity）通过反射注入SliceConfig字段
+     * - text层：嵌套对象，通过反射注入TextConfig字段
+     * - attributes层：嵌套对象，直接存入attributes Map
+     * - methods层：嵌套对象，直接存入methods Map
+     * - event层：嵌套对象，直接存入event Map
      * @param filePath JSON文件路径
      * @return 填充好的SliceConfig对象
      * @throws Exception 文件读取或解析异常
@@ -68,21 +75,89 @@ public class SliceInjector {
 
         SliceConfig config = new SliceConfig();
 
-        // 遍历所有JSON字段，区分通用属性和特殊属性
+        // 遍历所有JSON字段，分层处理
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
 
-            if (BASE_FIELDS.contains(key)) {
-                // 通用属性：通过反射注入SliceConfig字段
+            if (OUTER_FIELDS.contains(key)) {
+                // 外层字段：通过反射注入SliceConfig字段
                 injectField(config, key, value);
-            } else {
-                // 特殊属性：存入extra容器
-                config.extra.put(key, value);
+            } else if ("text".equals(key)) {
+                // text层：解析嵌套对象，注入TextConfig
+                injectTextConfig(config, value);
+            } else if ("attributes".equals(key)) {
+                // attributes层：解析嵌套对象，存入attributes Map
+                injectMap(config.attributes, value);
+            } else if ("methods".equals(key)) {
+                // methods层：解析嵌套对象，存入methods Map
+                injectMethodMap(config.methods, value);
+            } else if ("event".equals(key)) {
+                // event层：解析嵌套对象，存入event Map
+                injectMap(config.event, value);
             }
+            // 未知字段忽略
         }
 
         return config;
+    }
+
+    /**
+     * 解析text嵌套对象，通过反射注入TextConfig字段
+     * @param config 目标SliceConfig对象
+     * @param value text层的JSON值（应为Map）
+     */
+    @SuppressWarnings("unchecked")
+    private static void injectTextConfig(SliceConfig config, Object value) {
+        if (!(value instanceof Map)) return;
+        Map<String, Object> textMap = (Map<String, Object>) value;
+        for (Map.Entry<String, Object> entry : textMap.entrySet()) {
+            injectTextField(config.text, entry.getKey(), entry.getValue());
+        }
+    }
+
+    /**
+     * 通过反射将值注入TextConfig的指定字段
+     * @param textConfig 目标TextConfig对象
+     * @param fieldName 字段名
+     * @param value 字段值
+     */
+    private static void injectTextField(SliceConfig.TextConfig textConfig, String fieldName, Object value) {
+        try {
+            java.lang.reflect.Field field = SliceConfig.TextConfig.class.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            setFieldValue(field, textConfig, value);
+        } catch (NoSuchFieldException e) {
+            System.err.println("SliceInjector: TextConfig中不存在字段 '" + fieldName + "': " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("SliceInjector: 无法注入TextConfig字段 '" + fieldName + "': " + e.getMessage());
+        }
+    }
+
+    /**
+     * 解析嵌套对象，存入Map<String, Object>
+     * @param map 目标Map
+     * @param value 嵌套层的JSON值（应为Map）
+     */
+    @SuppressWarnings("unchecked")
+    private static void injectMap(Map<String, Object> map, Object value) {
+        if (!(value instanceof Map)) return;
+        Map<String, Object> sourceMap = (Map<String, Object>) value;
+        map.putAll(sourceMap);
+    }
+
+    /**
+     * 解析methods嵌套对象，存入Map<String, String>
+     * @param map 目标Map
+     * @param value methods层的JSON值（应为Map）
+     */
+    @SuppressWarnings("unchecked")
+    private static void injectMethodMap(Map<String, String> map, Object value) {
+        if (!(value instanceof Map)) return;
+        Map<String, Object> sourceMap = (Map<String, Object>) value;
+        for (Map.Entry<String, Object> entry : sourceMap.entrySet()) {
+            map.put(entry.getKey(), entry.getValue() != null ? entry.getValue().toString() : null);
+        }
     }
 
     /**
@@ -95,20 +170,31 @@ public class SliceInjector {
         try {
             java.lang.reflect.Field field = SliceConfig.class.getDeclaredField(fieldName);
             field.setAccessible(true);
-
-            if (field.getType() == int.class) {
-                field.setInt(config, ((Number) value).intValue());
-            } else if (field.getType() == double.class) {
-                field.setDouble(config, ((Number) value).doubleValue());
-            } else if (field.getType() == boolean.class) {
-                field.setBoolean(config, Boolean.parseBoolean(value.toString()));
-            } else if (field.getType() == String.class) {
-                field.set(config, value.toString());
-            } else {
-                field.set(config, value);
-            }
+            setFieldValue(field, config, value);
+        } catch (NoSuchFieldException e) {
+            System.err.println("SliceInjector: SliceConfig中不存在字段 '" + fieldName + "': " + e.getMessage());
         } catch (Exception e) {
             System.err.println("SliceInjector: 无法注入字段 '" + fieldName + "': " + e.getMessage());
+        }
+    }
+
+    /**
+     * 通用字段赋值方法，根据字段类型自动转换
+     * @param field 反射字段
+     * @param obj 目标对象
+     * @param value 字段值
+     */
+    private static void setFieldValue(java.lang.reflect.Field field, Object obj, Object value) throws IllegalAccessException {
+        if (field.getType() == int.class) {
+            field.setInt(obj, ((Number) value).intValue());
+        } else if (field.getType() == double.class) {
+            field.setDouble(obj, ((Number) value).doubleValue());
+        } else if (field.getType() == boolean.class) {
+            field.setBoolean(obj, Boolean.parseBoolean(value.toString()));
+        } else if (field.getType() == String.class) {
+            field.set(obj, value.toString());
+        } else {
+            field.set(obj, value);
         }
     }
 
@@ -132,8 +218,6 @@ public class SliceInjector {
     /**
      * 根据SliceConfig创建对应的Slice实例
      * moved=true则创建MoveSlice子类实例，moved=false则创建StaticSlice子类实例
-     * 注意：由于MoveSlice和StaticSlice是抽象类，需要由具体的子类来实例化
-     * 此方法提供配置信息，由调用方根据moved字段决定创建哪种Slice
      * @param config slice配置
      * @return 是否为可移动Slice
      */

@@ -147,3 +147,20 @@
   - clip裁剪矩形必须与按钮尺寸同步更新，否则放大部分会被裁掉
   - borderRadius、borderWidth、padding、fontSize等像素值需乘以缩放比例scale=Math.min(multiX, multiY)
   - applyStyle(1,1)用于初始化，applyStyle(multiX, multiY)用于窗口变化时动态更新
+
+## 对话 19: Slice注入机制重构——分层结构
+- 时间: 2026-06-05
+- 要求: 重构slice注入机制，将扁平结构改为分层结构（外层、text层、attributes层、methods层、event层）
+- 修改文件:
+  - SliceConfig.java — 从扁平结构重构为分层结构：外层保留name/moved/mapX/mapY/opacity；新增TextConfig内部类（包含fontSize/width/height/wrapText/insertTop-Left-Bottom-Right/opacity/borderColor/borderWidth/borderRadius/backgroundColor/textColor）；extra Map重命名为attributes Map；新增methods Map和event Map
+  - SliceInjector.java — 适配新分层结构：OUTER_FIELDS仅保留外层5个字段；解析text嵌套对象反射注入TextConfig；解析attributes/methods/event嵌套对象直接存入对应Map；提取通用setFieldValue方法
+  - ConfiguredMoveSlice.java — 将config.xxx改为config.text.xxx访问文本层属性；存储text引用避免重复访问；外层opacity控制整体透明度
+  - ConfiguredStaticSlice.java — 同上
+  - Player.json — 从旧扁平格式转为新分层格式（外层+text+attributes+methods+event）
+  - Game.java — 更新initSlices()中调试打印语句：extra→attributes，增加methods输出
+- 设计要点:
+  - 每个渲染层的opacity独立控制（外层opacity控制整体，text.opacity控制文本层，未来图片层等会有自己的opacity）
+  - attributes替代原extra，命名更规范，方法前缀从getXxxExtra改为getXxxAttribute
+  - methods层记录触发器→方法名的映射（如hit→attack），暂时不实现调用逻辑
+  - event层记录每游戏刻更新事件，为空或没有则不需要更新，通过hasEvent()判断
+  - 未来可扩展：新增渲染层（如image层）只需在JSON中添加嵌套对象，在SliceInjector中添加对应解析逻辑

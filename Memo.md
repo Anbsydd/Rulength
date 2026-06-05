@@ -51,11 +51,14 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 - SettingsConfig: opacity
 
 ## Slice配置注入体系
-- SliceConfig: name, moved, width, height (通用属性) + extra Map (特殊属性容器)
-- SliceInjector: 读取registry.json → 自动加载所有slice JSON → 反射注入通用属性 + 特殊属性归入extra
+- SliceConfig: 分层结构，外层属性 + 嵌套层
+- 外层属性: name(String), moved(boolean,决定MoveSlice/StaticSlice), mapX(double,默认0), mapY(double,默认0), opacity(double,默认1.0,整体透明度)
+- text层(TextConfig): fontSize(double,默认12), width(double,默认100), height(double,默认50), wrapText(boolean,默认false), insertTop/Right/Bottom/Left(double,默认0), opacity(double,默认1.0,独立控制), borderColor(String,默认transparent), borderWidth(double,默认0), borderRadius(double,默认0), backgroundColor(String,默认transparent), textColor(String,默认black)
+- attributes层: Map<String, Object>，记录slice的额外属性（如health, attack），通过getIntAttribute/getDoubleAttribute/getBooleanAttribute/getStringAttribute获取
+- methods层: Map<String, String>，记录slice可调用的方法映射（如 hit → attack），通过getMethod(trigger)获取
+- event层: Map<String, Object>，记录每个游戏刻需要更新的方法，为空或没有则不需要更新，通过hasEvent()判断
+- SliceInjector: 读取registry.json → 自动加载所有slice JSON → 分层注入（外层反射注入SliceConfig，text层反射注入TextConfig，attributes/methods/event层直接存入Map）
 - registry.json: 记录assets/slice/下所有需要加载的JSON文件名
-- 通用属性: name(String), moved(boolean,决定MoveSlice/StaticSlice), width(double), height(double), mapX(double,默认0), mapY(double,默认0), opacity(double,默认1.0), borderColor(String,默认transparent), borderWidth(double,默认0), borderRadius(double,默认0), backgroundColor(String,默认transparent), textColor(String,默认black), insertTop(double,默认0), insertRight(double,默认0), insertBottom(double,默认0), insertLeft(double,默认0), fontSize(double,默认12), wrapText(boolean,默认false)
-- 特殊属性: 存储在extra Map中，通过getIntExtra/getDoubleExtra/getBooleanExtra/getStringExtra获取
 - 支持热更新: SliceInjector.reload()重新加载所有配置
 - SliceRegistryGenerator: 自动扫描assets/slice/下所有.json文件，生成registry.json（排除自身，按文件名排序）
 - 渲染帧率配置: GameConfig.maxFrameRate(默认60) + vSync(默认true)，App.main()在launch前设置prism.refreshRate和prism.vsync系统属性
@@ -157,7 +160,7 @@ root子节点顺序: map → camera → static1 → move → miniMap（后者在
 ## 工具类
 - ImageManager: 图片加载+缓存（HashMap），支持classpath和文件路径，loadFit按比例缩放
 - PaneSizeManager: 订阅StageSizeChange自动调整Pane尺寸，支持倍率
-- SliceInjector: Slice配置注入工具，读取registry.json自动加载所有slice JSON，反射注入通用属性，特殊属性归入extra容器，支持热更新
+- SliceInjector: Slice配置注入工具，读取registry.json自动加载所有slice JSON，分层注入（外层反射+text层反射+attributes/methods/event层直接Map），支持热更新
 
 ## 坐标系总结
 - Camera offset: 视口中心相对地图中心的偏移（像素）

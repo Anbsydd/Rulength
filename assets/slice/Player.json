@@ -24,7 +24,5 @@
   "methods": {
     "hit": "attack"
   },
-  "event": {
-  
-  }
+  "event": {}
 }

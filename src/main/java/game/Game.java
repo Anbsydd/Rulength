@@ -98,7 +98,7 @@ public class Game {
             }
             slice.onLoad();
             // 打印加载信息，便于调试
-            System.out.println("SliceInjector: 已加载 Slice [" + cfg.name + "] moved=" + cfg.moved + " extra=" + cfg.extra);
+            System.out.println("SliceInjector: 已加载 Slice [" + cfg.name + "] moved=" + cfg.moved + " attributes=" + cfg.attributes + " methods=" + cfg.methods);
         }
     }
     
