@@ -250,9 +250,12 @@ public class Game {
             boolean wasColliding = activeCollisions.contains(pairKey);
 
             if (colliding && !wasColliding) {
-                // 进入碰撞 → 触发hit方法
+                // 进入碰撞
                 activeCollisions.add(pairKey);
                 onCollisionEnter(self, other);
+            } else if (colliding && wasColliding) {
+                // 持续碰撞中（每帧约束）
+                onCollisionStay(self, other);
             } else if (!colliding && wasColliding) {
                 // 退出碰撞
                 activeCollisions.remove(pairKey);
@@ -261,37 +264,95 @@ public class Game {
     }
 
     /**
-     * 碰撞进入时：触发self的methods映射中的hit方法
+     * 进入碰撞：触发操控方的hit及被碰撞方的beHit
      */
     private static void onCollisionEnter(Slice self, Slice other) {
-        // 触发self的hit（攻击方）
+        // 触发self的hit
         if (self instanceof ConfiguredMoveSlice ms) {
-            String methodName = ms.getConfig().getMethod("hit");
-            if (methodName != null) invokeSliceMethod(ms, methodName, other);
+            String m = ms.getConfig().getMethod("hit");
+            if (m != null) invokeSliceMethod(ms, m, other);
         } else if (self instanceof ConfiguredStaticSlice ss) {
-            String methodName = ss.getConfig().getMethod("hit");
-            if (methodName != null) invokeSliceMethod(ss, methodName, other);
+            String m = ss.getConfig().getMethod("hit");
+            if (m != null) invokeSliceMethod(ss, m, other);
         }
-        // 触发对方的beHit
+        // 触发对方的beHit（Obstruct等由invokeSliceMethod分发）
         if (other instanceof ConfiguredMoveSlice ms) {
-            String methodName = ms.getConfig().getMethod("beHit");
-            if (methodName != null) invokeSliceMethod(ms, methodName, self);
+            String m = ms.getConfig().getMethod("beHit");
+            if (m != null) invokeSliceMethod(ms, m, self);
         } else if (other instanceof ConfiguredStaticSlice ss) {
-            String methodName = ss.getConfig().getMethod("beHit");
-            if (methodName != null) invokeSliceMethod(ss, methodName, self);
+            String m = ss.getConfig().getMethod("beHit");
+            if (m != null) invokeSliceMethod(ss, m, self);
         }
+    }
+
+    /**
+     * 持续碰撞中：如果障碍物有Obstruct，持续clamp在边界
+     */
+    private static void onCollisionStay(Slice mover, Slice obstacle) {
+        if (hasObstruct(obstacle)) {
+            clampToBoundary(mover, obstacle);
+        }
+    }
+
+    private static boolean hasObstruct(Slice slice) {
+        String m = null;
+        if (slice instanceof ConfiguredMoveSlice ms) m = ms.getConfig().getMethod("beHit");
+        else if (slice instanceof ConfiguredStaticSlice ss) m = ss.getConfig().getMethod("beHit");
+        return "Obstruct".equals(m);
     }
 
     /**
      * 通过methods映射调用方法
      */
     private static void invokeSliceMethod(Slice caller, String methodName, Slice target) {
-        if ("attack".equals(methodName)) {
-            System.out.println(caller.getName() + "攻击了" + target.getName());
-        } else if ("beAttacked".equals(methodName)) {
-            System.out.println(caller.getName() + "被" + target.getName()+ "攻击了");
-        } else {
-            System.out.println("未知方法: " + methodName);
+        switch (methodName) {
+            case "attack" -> System.out.println(caller.getName() + "攻击了" + target.getName());
+            case "Obstruct" -> clampToBoundary(target, caller); // caller=障碍物, target=移动者
+            default -> System.out.println("未知方法: " + methodName);
         }
+    }
+
+    /**
+     * 沿运动方向逐px步进，将mover刚好挡在障碍物边界外，
+     * 同时同步所有拖拽锚点，保证鼠标始终粘着slice固定位置
+     */
+    private static void clampToBoundary(Slice mover, Slice obstructing) {
+        double lastTraX = mover.getLastTranslateX();
+        double lastTraY = mover.getLastTranslateY();
+        double curTraX = mover.getTranslateX();
+        double curTraY = mover.getTranslateY();
+
+        double dx = curTraX - lastTraX;
+        double dy = curTraY - lastTraY;
+        double len = Math.sqrt(dx * dx + dy * dy);
+        if (len < 0.5) return;
+
+        // 归一化步长1px
+        double sx = dx / len;
+        double sy = dy / len;
+        int steps = (int) Math.ceil(len);
+
+        // 恢复到上一帧非碰撞位置，逐px前进
+        mover.setMapX(mover.finalTraToMapX(lastTraX));
+        mover.setMapY(mover.finalTraToMapY(lastTraY));
+
+        int clamped = steps;
+        for (int i = 1; i <= steps; i++) {
+            double testX = lastTraX + sx * i;
+            double testY = lastTraY + sy * i;
+            mover.setMapX(mover.finalTraToMapX(testX));
+            mover.setMapY(mover.finalTraToMapY(testY));
+            if (CollisionUtil.checkCollision(mover, obstructing)) {
+                clamped = i - 1;
+                break;
+            }
+        }
+
+        // 停在碰撞前一刻
+        mover.setMapX(mover.finalTraToMapX(lastTraX + sx * clamped));
+        mover.setMapY(mover.finalTraToMapY(lastTraY + sy * clamped));
+
+        // 同步所有拖拽锚点（含鼠标场景坐标），保证鼠标相对位置不变
+        mover.syncFullDragAnchor();
     }
 }

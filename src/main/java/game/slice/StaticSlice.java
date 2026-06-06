@@ -45,10 +45,10 @@ public abstract class StaticSlice extends Slice {
     @Override
     protected void dragged(MouseEvent e) {
         if (!isDragging) return;
-        double currentX = e.getSceneX();
-        double currentY = e.getSceneY();
-        setMapX(finalTraToMapX((currentX - lastMouseX) / zoom + lastTraX));
-        setMapY(finalTraToMapY((currentY - lastMouseY) / zoom + lastTraY));
+        currentDragSceneX = e.getSceneX();
+        currentDragSceneY = e.getSceneY();
+        setMapX(finalTraToMapX((currentDragSceneX - lastMouseX) / zoom + lastTraX));
+        setMapY(finalTraToMapY((currentDragSceneY - lastMouseY) / zoom + lastTraY));
         // 移动后检测碰撞
         Game.checkCollisions(this);
     }

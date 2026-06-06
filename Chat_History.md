@@ -205,3 +205,21 @@
 - 设计要点:
   - 仅在 colliding && !wasColliding 时触发hit，避免持续碰撞重复调用
   - 碰撞时对等触发：self调用自己的hit（→ attack），也触发对方的hit
+
+## 对话 23: 碰撞逻辑修正（beHit + Obstruct）
+- 时间: 2026-06-06
+- 要求: 碰撞改为触发操控方的hit及被碰撞方的beHit；创建t2.json（beHit→Obstruct）阻止其他slice进入。
+  修正需求：Obstruct改为挡在门外（接触前一刻），不能弹到旁边；建立鼠标约束。
+- 新增文件:
+  - assets/slice/t2.json — 测试用静态阻挡体，moved=false，beHit方法映射为Obstruct
+- 修改文件:
+  - Game.java — checkCollisions新增onCollisionStay持续约束分支；onCollisionStay中Obstruct每帧call clampToBoundary；
+    重构obstructTarget→clampToBoundary：沿运动方向从上一帧锚点逐px步进，停在刚好接触前的位置；
+    invokeSliceMethod精简为switch+vavlink。新增hasObstruct/onCollisionStay辅助方法。
+  - Slice.java — 新增currentDragSceneX/Y记录拖拽时的鼠标场景坐标；
+    新增syncFullDragAnchor同步拖拽+鼠标锚点；新增getLastTranslateX/Y
+  - MoveSlice.java/StaticSlice.java — dragged()中保存鼠标场景坐标到currentDragSceneX/Y
+- 设计要点:
+  - clampToBoundary从lastTra恢复逐px前进，找到刚好不碰撞的位置
+  - syncFullDragAnchor同步lastMouseX/Y，保证鼠标始终粘着slice固定相对位置
+  - 持续碰撞期间每帧都触发约束，直到退出碰撞

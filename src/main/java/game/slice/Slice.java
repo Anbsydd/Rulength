@@ -28,6 +28,9 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
     protected double lastMouseY;
     protected double lastTraX;
     protected double lastTraY;
+    /** 当前拖拽事件的鼠标场景坐标，供Obstruct等外部约束使用 */
+    protected double currentDragSceneX;
+    protected double currentDragSceneY;
     protected DoubleProperty mapX;
     protected DoubleProperty mapY;
     boolean isDragging = false;
@@ -170,4 +173,28 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
     public DoubleProperty mapYProperty() {
         return mapY;
     }
+
+    /**
+     * 在被外部强制移动后同步拖拽和鼠标锚点，防止下一次dragged()把位置拉回
+     */
+    public void syncDragAnchor() {
+        lastTraX = getTranslateX();
+        lastTraY = getTranslateY();
+    }
+
+    /**
+     * 被外部强制移动后同步所有拖拽锚点（包括鼠标场景坐标），
+     * 保证鼠标始终拖拽着slice的固定相对位置
+     */
+    public void syncFullDragAnchor() {
+        lastTraX = getTranslateX();
+        lastTraY = getTranslateY();
+        lastMouseX = currentDragSceneX;
+        lastMouseY = currentDragSceneY;
+    }
+
+    /** 获取本次拖拽开始前（或上次clamp后）的translate锚点X */
+    public double getLastTranslateX() { return lastTraX; }
+    /** 获取本次拖拽开始前（或上次clamp后）的translate锚点Y */
+    public double getLastTranslateY() { return lastTraY; }
 }

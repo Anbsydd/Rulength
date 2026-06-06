@@ -37,10 +37,10 @@ public abstract class MoveSlice extends Slice {
     @Override
     protected void dragged(MouseEvent e) {
         if (!isDragging) return;
-        double currentX = e.getSceneX();
-        double currentY = e.getSceneY();
-        setMapX(finalTraToMapX((currentX - lastMouseX) + lastTraX));
-        setMapY(finalTraToMapY((currentY - lastMouseY) + lastTraY));
+        currentDragSceneX = e.getSceneX();
+        currentDragSceneY = e.getSceneY();
+        setMapX(finalTraToMapX((currentDragSceneX - lastMouseX) + lastTraX));
+        setMapY(finalTraToMapY((currentDragSceneY - lastMouseY) + lastTraY));
         // 移动后检测碰撞
         Game.checkCollisions(this);
     }
