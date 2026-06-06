@@ -3,6 +3,7 @@ package game.window;
 import config.CameraConfig;
 import event.MapTransformEvent;
 import event.StageSizeChange;
+import game.input.RelativeMouse;
 import javafx.animation.AnimationTimer;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -151,17 +152,26 @@ public class Camera extends StackPane {
     private void cameraReleased(MouseEvent event) {
         if (event.getButton() == MouseButton.SECONDARY) {
             isDragging = false;
+            RelativeMouse.exit(getScene());
         }
     }
 
     private void cameraDragged(MouseEvent event) {
         if (event.getButton() == MouseButton.SECONDARY) {
             if (!isDragging) return;
-            double currentX = event.getSceneX() - 0.5 * viewportWidth;
-            double currentY = event.getSceneY() - 0.5 * viewportHeight;
 
-            targetOffsetX = dragStartOffsetX + (currentX - dragStartX);
-            targetOffsetY = dragStartOffsetY + (currentY - dragStartY);
+            if (RelativeMouse.isActive()) {
+                // 相对鼠标模式：用增量累积偏移
+                targetOffsetX += RelativeMouse.pollDeltaX(event);
+                targetOffsetY += RelativeMouse.pollDeltaY(event);
+                RelativeMouse.warpBack();
+            } else {
+                // 绝对鼠标模式：原有逻辑
+                double currentX = event.getSceneX() - 0.5 * viewportWidth;
+                double currentY = event.getSceneY() - 0.5 * viewportHeight;
+                targetOffsetX = dragStartOffsetX + (currentX - dragStartX);
+                targetOffsetY = dragStartOffsetY + (currentY - dragStartY);
+            }
             clampTarget();
         }
     }
@@ -169,11 +179,12 @@ public class Camera extends StackPane {
     private void cameraPressed(MouseEvent event) {
         if (event.getButton() == MouseButton.SECONDARY) {
             freeze();
+            isDragging = true;
+            RelativeMouse.enter(getScene());
             dragStartX = event.getSceneX() - 0.5 * viewportWidth;
             dragStartY = event.getSceneY() - 0.5 * viewportHeight;
             dragStartOffsetX = targetOffsetX;
             dragStartOffsetY = targetOffsetY;
-            isDragging = true;
         }
     }
 

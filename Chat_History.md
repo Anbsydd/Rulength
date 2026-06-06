@@ -236,3 +236,20 @@
 - 设计要点:
   - threshold转换公式: totalLen * mover.isMoveSlice() = translateDelta * (mouseDelta/translateDelta) = mouseDelta场景距离
   - MoveSlice.isMoveSlice()=1.0，乘以1.0不变，不影响现有行为
+
+## 对话 25: 相对鼠标模式 (Relative Mouse Mode)
+- 时间: 2026-06-06
+- 要求: 拖拽时（左键拖Slice + 右键拖地图）隐藏鼠标、鼠标不受窗口边界限制、可无限移动、获取鼠标增量(dx/dy)、Robot每帧将鼠标拉回窗口中心
+- 新增文件:
+  - game/input/RelativeMouse.java — 相对鼠标模式工具类，封装Robot归位、鼠标隐藏/显示、增量计算
+- 修改文件:
+  - Slice.java — pressed()进入相对模式；dragged()分支：相对模式用增量+syncDragAnchor（不同步鼠标锚点）；addFilters()中MOUSE_RELEASED处理器退出相对模式（防止StaticSlice的MapTransformEvent订阅者每帧触发released干扰）；syncFullDragAnchor在相对模式下跳过更新lastMouse
+  - Camera.java — cameraPressed/cameraDragged/cameraReleased接入相对鼠标模式；cameraDragged相对模式用增量累积targetOffsetX/Y
+  - module-info.java — 添加requires java.desktop（java.awt.Robot所需）
+- 设计要点:
+  - RelativeMouse.enter(Scene) → 隐藏光标(Cursor.NONE)，Robot归位到窗口中心，记录centerSceneX/Y
+  - pollDeltaX/Y(event) → event.getSceneX() - centerSceneX，即从窗口中心的帧增量
+  - warpBack() → 每次dragged末尾调用Robot.mouseMove将OS光标拉回窗口中心，产生持续偏移
+  - exit(Scene) → 显示光标(Cursor.DEFAULT)
+  - 相对模式下clampToBoundary调用syncFullDragAnchor不会覆盖lastMouse（通过isActive()判断跳过）
+  - StaticSlice的MapTransformEvent订阅者每帧调用released()，所以RelativeMouse.exit()不在released()中调用，而放在addFilters()的MOUSE_RELEASED处理器中

@@ -4,6 +4,7 @@ module Rulength {
     requires javafx.web;
     requires javafx.swing;
     requires com.fasterxml.jackson.databind;
+    requires java.desktop;
 
     exports event;
     exports event.input;

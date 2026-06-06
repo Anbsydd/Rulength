@@ -7,6 +7,7 @@ import event.input.MousePressed;
 import event.input.MouseReleased;
 import event.input.MouseScrolled;
 import game.Game;
+import game.input.RelativeMouse;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -82,7 +83,7 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
             if (e.getButton() == MouseButton.SECONDARY) bus.publish(new MouseDragged(e));
         };
         EventHandler<MouseEvent> released = e -> {
-            if (e.getButton() == MouseButton.PRIMARY) released();
+            if (e.getButton() == MouseButton.PRIMARY) { released(); RelativeMouse.exit(getScene()); }
             if (e.getButton() == MouseButton.SECONDARY) bus.publish(new MouseReleased(e));
         };
         addAndRegisterEventFilter(ScrollEvent.SCROLL, scrolled);
@@ -93,6 +94,9 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
 
     protected void pressed(MouseEvent e) {
         isDragging = canBeDragged;
+        if (isDragging) {
+            RelativeMouse.enter(getScene());
+        }
         recordXAY(e.getSceneX(), e.getSceneY());
     }
 
@@ -116,15 +120,30 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
     }
 
     protected void dragged(MouseEvent e){
-        
+
         if (!isDragging) return;
-        currentDragSceneX = e.getSceneX();
-        currentDragSceneY = e.getSceneY();
-        setMapX(finalTraToMapX((currentDragSceneX - lastMouseX)/isMoveSlice() + lastTraX));
-        setMapY(finalTraToMapY((currentDragSceneY - lastMouseY)/isMoveSlice() + lastTraY));
-        // 移动后检测碰撞
-        Game.checkCollisions(this);
-        syncFullDragAnchor();
+
+        if (RelativeMouse.isActive()) {
+            // 相对鼠标模式：用增量计算位移
+            double dx = RelativeMouse.pollDeltaX(e);
+            double dy = RelativeMouse.pollDeltaY(e);
+            setMapX(finalTraToMapX(dx / isMoveSlice() + lastTraX));
+            setMapY(finalTraToMapY(dy / isMoveSlice() + lastTraY));
+            // 移动后检测碰撞
+            Game.checkCollisions(this);
+            // 只同步拖拽锚点，不同步鼠标锚点（保持lastMouse始终为进入时的中心值）
+            syncDragAnchor();
+            RelativeMouse.warpBack();
+        } else {
+            // 绝对鼠标模式：原有逻辑
+            currentDragSceneX = e.getSceneX();
+            currentDragSceneY = e.getSceneY();
+            setMapX(finalTraToMapX((currentDragSceneX - lastMouseX)/isMoveSlice() + lastTraX));
+            setMapY(finalTraToMapY((currentDragSceneY - lastMouseY)/isMoveSlice() + lastTraY));
+            // 移动后检测碰撞
+            Game.checkCollisions(this);
+            syncFullDragAnchor();
+        }
     };
     abstract public double isMoveSlice();
     @Override
@@ -196,12 +215,16 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
     /**
      * 被外部强制移动后同步所有拖拽锚点（包括鼠标场景坐标），
      * 保证鼠标始终拖拽着slice的固定相对位置
+     * <p>
+     * 相对鼠标模式下不更新鼠标锚点（防止破坏center基准），由exit()统一清理
      */
     public void syncFullDragAnchor() {
         lastTraX = getTranslateX();
         lastTraY = getTranslateY();
-        lastMouseX = currentDragSceneX;
-        lastMouseY = currentDragSceneY;
+        if (!RelativeMouse.isActive()) {
+            lastMouseX = currentDragSceneX;
+            lastMouseY = currentDragSceneY;
+        }
     }
 
     /** 获取本次拖拽开始前（或上次clamp后）的translate锚点X */
