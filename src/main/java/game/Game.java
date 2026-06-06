@@ -313,64 +313,69 @@ public class Game {
     }
 
     /**
-     * 沿运动方向轴分离clamp，将mover挡在障碍物边界外
-     * 1. 先单独约束X轴：Y保持不动，X逐px前进到碰撞前一帧
-     * 2. 再单独约束Y轴：在X已约束基础上，Y逐px前进到碰撞前一帧
-     * 3. 同步所有锚点保证鼠标粘着slice
-     * <p>
-     * 步进过程直接使用 setTranslateX/Y 避免 mapX/listener 中间态导致的抖动
+     * 沿运动轨迹将mover挡在障碍物边界外，同时允许贴墙滑动
+     *
+     * 阶段1 — 二分查找：在上一帧安全位置与当前位置之间，精确找到碰撞入口点
+     * 阶段2 — 轴独立滑动：从入口点分别尝试X和Y轴，不碰撞则放行
      */
     private static void clampToBoundary(Slice mover, Slice obstructing) {
         double lastTraX = mover.getLastTranslateX();
         double lastTraY = mover.getLastTranslateY();
         double curTraX = mover.getTranslateX();
         double curTraY = mover.getTranslateY();
+        double dx = curTraX - lastTraX;
+        double dy = curTraY - lastTraY;
+        double totalLen = Math.sqrt(dx * dx + dy * dy);
+        if (totalLen < 0.5) return;
 
-        // 恢复到上一帧非碰撞位置
-        mover.setTranslateX(lastTraX);
-        mover.setTranslateY(lastTraY);
-
-        // —— 约束X轴 ——
-        double clampedTraX = clampAxis(mover, obstructing, lastTraX, curTraX, lastTraY, true);
-        // —— 在X约束结果基础上约束Y轴 ——
-        double clampedTraY = clampAxis(mover, obstructing, lastTraY, curTraY, clampedTraX, false);
-
-        // 最终位置 write-back 到 mapX/mapY（触发 listener，值与当前translate一致）
-        mover.setMapX(mover.finalTraToMapX(clampedTraX));
-        mover.setMapY(mover.finalTraToMapY(clampedTraY));
-
-        // 同步所有拖拽锚点（含鼠标场景坐标）
-        mover.syncFullDragAnchor();
-    }
-
-    /**
-     * 单轴逐px步进约束，返回该轴上不会导致碰撞的最大translate坐标
-     * @param fixedCoord 另一轴的坐标值（约束X时固定Y，约束Y时固定X）
-     */
-    private static double clampAxis(Slice mover, Slice obstructing,
-                                     double last, double cur, double fixedCoord, boolean isX) {
-        double dx = cur - last;
-        double len = Math.abs(dx);
-        if (len < 0.5) return cur;
-
-        double stepDir = dx > 0 ? 1 : -1;
-        int steps = (int) Math.ceil(len);
-        int clamped = steps;
-
-        for (int i = 1; i <= steps; i++) {
-            double testCoord = last + stepDir * i;
-            if (isX) {
-                mover.setTranslateX(testCoord);
-                mover.setTranslateY(fixedCoord);
-            } else {
-                mover.setTranslateX(fixedCoord);
-                mover.setTranslateY(testCoord);
-            }
+        // —— 阶段1：二分查找入口点 ——
+        // lastTra 是安全的，curTra 是碰撞的；在它们之间找边界
+        double safeT = 0.0, collideT = 1.0;
+        for (int iter = 0; iter < 12; iter++) {
+            double mid = (safeT + collideT) / 2.0;
+            double testX = lastTraX + dx * mid;
+            double testY = lastTraY + dy * mid;
+            mover.setMapX(mover.finalTraToMapX(testX));
+            mover.setMapY(mover.finalTraToMapY(testY));
             if (CollisionUtil.checkCollision(mover, obstructing)) {
-                clamped = i - 1;
-                break;
+                collideT = mid;
+            } else {
+                safeT = mid;
             }
         }
-        return last + stepDir * clamped;
+
+        // 入口点 = 最后一个安全位置
+        double entryX = lastTraX + dx * safeT;
+        double entryY = lastTraY + dy * safeT;
+        mover.setMapX(mover.finalTraToMapX(entryX));
+        mover.setMapY(mover.finalTraToMapY(entryY));
+
+        // —— 阶段2：从入口点轴独立滑动 ——
+        double remX = curTraX - entryX;
+        double remY = curTraY - entryY;
+
+        // 尝试X轴（Y固定在入口点）
+        double finalX, finalY;
+        if (Math.abs(remX) > 0.5) {
+            mover.setMapX(mover.finalTraToMapX(entryX + remX));
+            mover.setMapY(mover.finalTraToMapY(entryY));
+            finalX = CollisionUtil.checkCollision(mover, obstructing) ? entryX : entryX + remX;
+        } else {
+            finalX = entryX;
+        }
+
+        // 尝试Y轴（X使用上一步结果）
+        if (Math.abs(remY) > 0.5) {
+            mover.setMapX(mover.finalTraToMapX(finalX));
+            mover.setMapY(mover.finalTraToMapY(entryY + remY));
+            finalY = CollisionUtil.checkCollision(mover, obstructing) ? entryY : entryY + remY;
+        } else {
+            finalY = entryY;
+        }
+
+        mover.setMapX(mover.finalTraToMapX(finalX));
+        mover.setMapY(mover.finalTraToMapY(finalY));
+        // 同步所有锚点
+        mover.syncFullDragAnchor();
     }
 }

@@ -2,7 +2,6 @@ package game.slice;
 
 import event.MapTransformEvent;
 import event.StageSizeChange;
-import game.Game;
 import game.window.Camera;
 import javafx.scene.input.MouseEvent;
 
@@ -36,15 +35,12 @@ public abstract class MoveSlice extends Slice {
 
     @Override
     protected void dragged(MouseEvent e) {
-        if (!isDragging) return;
-        currentDragSceneX = e.getSceneX();
-        currentDragSceneY = e.getSceneY();
-        setMapX(finalTraToMapX((currentDragSceneX - lastMouseX) + lastTraX));
-        setMapY(finalTraToMapY((currentDragSceneY - lastMouseY) + lastTraY));
-        // 移动后检测碰撞
-        Game.checkCollisions(this);
+        super.dragged(e);
     }
-
+    @Override
+    protected double isMoveSlice(){
+        return 1.0;
+    }
     @Override
     public double finalTraToMapX(double traX) {
         return (traX - Camera.offsetX) / zoom / game.Game.multiX;

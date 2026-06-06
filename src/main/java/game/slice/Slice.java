@@ -6,6 +6,7 @@ import event.input.MouseDragged;
 import event.input.MousePressed;
 import event.input.MouseReleased;
 import event.input.MouseScrolled;
+import game.Game;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -114,8 +115,18 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
         setTranslateY(finalMapToTraY(mapY.doubleValue()));
     }
 
-    abstract protected void dragged(MouseEvent e);
-
+    protected void dragged(MouseEvent e){
+        
+        if (!isDragging) return;
+        currentDragSceneX = e.getSceneX();
+        currentDragSceneY = e.getSceneY();
+        setMapX(finalTraToMapX((currentDragSceneX - lastMouseX)/isMoveSlice() + lastTraX));
+        setMapY(finalTraToMapY((currentDragSceneY - lastMouseY)/isMoveSlice() + lastTraY));
+        // 移动后检测碰撞
+        Game.checkCollisions(this);
+        syncFullDragAnchor();
+    };
+    abstract protected double isMoveSlice();
     @Override
     public void unload() {
         if (!loaded) return;

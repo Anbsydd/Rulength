@@ -22,6 +22,7 @@
 * 使用 ConfigLoader 加载 JSON 配置
 * 新增配置需同步更新: Config类、JSON文件、使用方注入
 * ！采用Chat\_History.md记录历史对话，每次对话必须记录时间与内容
+* 更新slice位置一律用MapX/Y，非渲染问题一律禁止用translateX/Y
 
 ## 4\. 变更流程
 
