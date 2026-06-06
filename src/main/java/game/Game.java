@@ -31,6 +31,9 @@ public class Game {
     StackPane move;
     /** 存储所有碰撞相关 slice，用于碰撞检测 */
     private static final java.util.List<Slice> allSlices = new java.util.ArrayList<>();
+
+    /** 当前活跃碰撞对集合（pair key），用于进出碰撞检测 */
+    private static final java.util.Set<Long> activeCollisions = java.util.concurrent.ConcurrentHashMap.newKeySet();
     public static ExecutorService mainPool;
     // 配置文件路径
     private static final String GAME_CONFIG_PATH = "assets/config/gameConfig.json";
@@ -226,51 +229,69 @@ public class Game {
     }
 
     /**
+     * 为两个Slice生成唯一碰撞对key（较小的identity在前）
+     */
+    private static long collisionPairKey(Slice a, Slice b) {
+        int idA = System.identityHashCode(a);
+        int idB = System.identityHashCode(b);
+        long key = ((long) Math.min(idA, idB) << 32) | (Math.max(idA, idB) & 0xFFFFFFFFL);
+        return key;
+    }
+
+    /**
      * 检测指定Slice与其他所有Slice的碰撞
-     * 若发生碰撞且双方都有methods定义，调用对应方法
+     * 记录碰撞进出状态，每次进出视为一次碰撞
      */
     public static void checkCollisions(Slice self) {
         for (Slice other : allSlices) {
             if (other == self) continue;
-            if (!CollisionUtil.checkCollision(self, other)) continue;
+            long pairKey = collisionPairKey(self, other);
+            boolean colliding = CollisionUtil.checkCollision(self, other);
+            boolean wasColliding = activeCollisions.contains(pairKey);
 
-            // 从self的config中获取hit方法名并调用
-            if (self instanceof ConfiguredMoveSlice ms) {
-                String methodName = ms.getConfig().getMethod("hit");
-                if (methodName != null) {
-                    invokeSliceMethod(ms, methodName, other);
-                }
-            } else if (self instanceof ConfiguredStaticSlice ss) {
-                String methodName = ss.getConfig().getMethod("hit");
-                if (methodName != null) {
-                    invokeSliceMethod(ss, methodName, other);
-                }
-            }
-
-            // 也触发对方的hit（相互碰撞）
-            if (other instanceof ConfiguredMoveSlice ms) {
-                String methodName = ms.getConfig().getMethod("beHit");
-                if (methodName != null) {
-                    invokeSliceMethod(ms, methodName, self);
-                }
-            } else if (other instanceof ConfiguredStaticSlice ss) {
-                String methodName = ss.getConfig().getMethod("beHit");
-                if (methodName != null) {
-                    invokeSliceMethod(ss, methodName, self);
-                }
+            if (colliding && !wasColliding) {
+                // 进入碰撞 → 触发hit方法
+                activeCollisions.add(pairKey);
+                onCollisionEnter(self, other);
+            } else if (!colliding && wasColliding) {
+                // 退出碰撞
+                activeCollisions.remove(pairKey);
             }
         }
     }
 
     /**
-     * 通过反射调用SliceConfig中methods映射的方法
-     * 目前支持 "attack" 方法
+     * 碰撞进入时：触发self的methods映射中的hit方法
+     */
+    private static void onCollisionEnter(Slice self, Slice other) {
+        // 触发self的hit（攻击方）
+        if (self instanceof ConfiguredMoveSlice ms) {
+            String methodName = ms.getConfig().getMethod("hit");
+            if (methodName != null) invokeSliceMethod(ms, methodName, other);
+        } else if (self instanceof ConfiguredStaticSlice ss) {
+            String methodName = ss.getConfig().getMethod("hit");
+            if (methodName != null) invokeSliceMethod(ss, methodName, other);
+        }
+        // 触发对方的beHit
+        if (other instanceof ConfiguredMoveSlice ms) {
+            String methodName = ms.getConfig().getMethod("beHit");
+            if (methodName != null) invokeSliceMethod(ms, methodName, self);
+        } else if (other instanceof ConfiguredStaticSlice ss) {
+            String methodName = ss.getConfig().getMethod("beHit");
+            if (methodName != null) invokeSliceMethod(ss, methodName, self);
+        }
+    }
+
+    /**
+     * 通过methods映射调用方法
      */
     private static void invokeSliceMethod(Slice caller, String methodName, Slice target) {
-        switch (methodName) {
-            case "attack" -> System.out.println(caller.getName() + "攻击了" + target.getName());
-            case "beAttacked" -> System.out.println(caller.getName() + "被" + target.getName() + "攻击了");
-            default -> System.out.println("未知方法: " + methodName);
+        if ("attack".equals(methodName)) {
+            System.out.println(caller.getName() + "攻击了" + target.getName());
+        } else if ("beAttacked".equals(methodName)) {
+            System.out.println(caller.getName() + "被" + target.getName()+ "攻击了");
+        } else {
+            System.out.println("未知方法: " + methodName);
         }
     }
 }

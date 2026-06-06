@@ -196,3 +196,12 @@
   - 其他系统通过 bus.subscribe(TickEvent.class, e -> { ... }) 订阅
   - 提供 start()/stop()/reset() 生命周期控制，FPS 统计（默认注释）
   - 目标 60 tick/s，每刻间隔约 16.67ms
+
+## 对话 22: 碰撞进出检测——每次进出视为一次碰撞
+- 时间: 2026-06-06
+- 要求: 利用CollisionUtil，让碰撞进出时调用attack方法（sout），每次进出视为一次碰撞
+- 修改文件:
+  - Game.java — 新增activeCollisions集合（ConcurrentHashMap.newKeySet()）记录当前碰撞对；新增collisionPairKey用identityHashCode组合生成long key；重构checkCollisions为进出检测（进入触发onCollisionEnter，退出仅移除记录）
+- 设计要点:
+  - 仅在 colliding && !wasColliding 时触发hit，避免持续碰撞重复调用
+  - 碰撞时对等触发：self调用自己的hit（→ attack），也触发对方的hit
