@@ -4,6 +4,9 @@ import config.*;
 import event.EventBus;
 import event.MapTransformEvent;
 import event.StageSizeChange;
+import game.slice.ConfiguredMoveSlice;
+import game.slice.ConfiguredStaticSlice;
+import game.slice.Slice;
 import game.window.Camera;
 import game.window.MiniMap;
 import game.window.SettingsUI;
@@ -11,6 +14,7 @@ import game.window.Stage;
 import javafx.scene.Node;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
+import util.CollisionUtil;
 import util.ImageManager;
 import util.PaneSizeManager;
 
@@ -25,6 +29,8 @@ public class Game {
     Camera camera;
     StackPane static1;
     StackPane move;
+    /** 存储所有碰撞相关 slice，用于碰撞检测 */
+    private static final java.util.List<Slice> allSlices = new java.util.ArrayList<>();
     public static ExecutorService mainPool;
     // 配置文件路径
     private static final String GAME_CONFIG_PATH = "assets/config/gameConfig.json";
@@ -101,6 +107,7 @@ public class Game {
                 static1.getChildren().add(slice);
             }
             slice.onLoad();
+            allSlices.add(slice);
             // 打印加载信息，便于调试
             System.out.println("SliceInjector: 已加载 Slice [" + cfg.name + "] moved=" + cfg.moved + " attributes=" + cfg.attributes + " methods=" + cfg.methods);
         }
@@ -216,5 +223,54 @@ public class Game {
         javafxStage.setWidth(config.width);
         javafxStage.setHeight(config.height);
         javafxStage.setFullScreenExitHint(config.fullScreenExitHint);
+    }
+
+    /**
+     * 检测指定Slice与其他所有Slice的碰撞
+     * 若发生碰撞且双方都有methods定义，调用对应方法
+     */
+    public static void checkCollisions(Slice self) {
+        for (Slice other : allSlices) {
+            if (other == self) continue;
+            if (!CollisionUtil.checkCollision(self, other)) continue;
+
+            // 从self的config中获取hit方法名并调用
+            if (self instanceof ConfiguredMoveSlice ms) {
+                String methodName = ms.getConfig().getMethod("hit");
+                if (methodName != null) {
+                    invokeSliceMethod(ms, methodName, other);
+                }
+            } else if (self instanceof ConfiguredStaticSlice ss) {
+                String methodName = ss.getConfig().getMethod("hit");
+                if (methodName != null) {
+                    invokeSliceMethod(ss, methodName, other);
+                }
+            }
+
+            // 也触发对方的hit（相互碰撞）
+            if (other instanceof ConfiguredMoveSlice ms) {
+                String methodName = ms.getConfig().getMethod("beHit");
+                if (methodName != null) {
+                    invokeSliceMethod(ms, methodName, self);
+                }
+            } else if (other instanceof ConfiguredStaticSlice ss) {
+                String methodName = ss.getConfig().getMethod("beHit");
+                if (methodName != null) {
+                    invokeSliceMethod(ss, methodName, self);
+                }
+            }
+        }
+    }
+
+    /**
+     * 通过反射调用SliceConfig中methods映射的方法
+     * 目前支持 "attack" 方法
+     */
+    private static void invokeSliceMethod(Slice caller, String methodName, Slice target) {
+        switch (methodName) {
+            case "attack" -> System.out.println(caller.getName() + "攻击了" + target.getName());
+            case "beAttacked" -> System.out.println(caller.getName() + "被" + target.getName() + "攻击了");
+            default -> System.out.println("未知方法: " + methodName);
+        }
     }
 }

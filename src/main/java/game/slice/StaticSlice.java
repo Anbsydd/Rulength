@@ -2,6 +2,7 @@ package game.slice;
 
 import event.MapTransformEvent;
 import event.StageSizeChange;
+import game.Game;
 import javafx.scene.input.MouseEvent;
 
 import static game.Game.bus;
@@ -48,6 +49,8 @@ public abstract class StaticSlice extends Slice {
         double currentY = e.getSceneY();
         setMapX(finalTraToMapX((currentX - lastMouseX) / zoom + lastTraX));
         setMapY(finalTraToMapY((currentY - lastMouseY) / zoom + lastTraY));
+        // 移动后检测碰撞
+        Game.checkCollisions(this);
     }
 
     @Override

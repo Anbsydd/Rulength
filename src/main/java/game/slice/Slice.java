@@ -138,6 +138,10 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
         this.name.set(name);
     }
 
+    public String getName() {
+        return name.get();
+    }
+
     public void setLocation(double x, double y) {
         setMapX(x);
         setMapY(y);

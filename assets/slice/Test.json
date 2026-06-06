@@ -25,7 +25,7 @@
     "attack": 10
   },
   "methods": {
-    "hit": "attack"
+    "beHit": "beAttacked"
   },
   "event": {}
 }

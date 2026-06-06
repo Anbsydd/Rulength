@@ -82,12 +82,9 @@ public class MiniMap extends StackPane {
         bus.subscribe(MapTransformEvent.class, this::onMapTransform);
         bus.subscribe(StageSizeChange.class, this::onStageResize);
 
-        // 点击小地图跳转
-        setOnMouseClicked(e -> {
-            double clickX = e.getX();
-            double clickY = e.getY();
-            jumpToMiniMapPos(clickX, clickY);
-        });
+        // 按下/拖拽小地图跳转 — 按住时持续更新位置
+        setOnMousePressed(e -> jumpToMiniMapPos(e.getX(), e.getY()));
+        setOnMouseDragged(e -> jumpToMiniMapPos(e.getX(), e.getY()));
     }
 
     /**
