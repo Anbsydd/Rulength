@@ -5,7 +5,8 @@
     "keepAliveSeconds": "线程池空闲线程存活时间（秒）",
     "queueCapacity": "线程池任务队列容量",
     "mapImagePath": "地图背景图片路径（相对assets目录）",
-    "startMenuImagePath": "开始菜单背景图片路径（相对assets目录）"
+    "startMenuImagePath": "开始菜单背景图片路径（相对assets目录）",
+    "mouseSensitivity": "相对鼠标灵敏度，1.0=正常，>1.0加速，<1.0减速"
   },
   "stageConfig.json": {
     "title": "窗口标题",

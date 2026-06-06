@@ -6,5 +6,6 @@
   "mapImagePath" : "uiImages/backgrounds/map.png",
   "startMenuImagePath" : "uiImages/backgrounds/bg.jpg",
   "maxFrameRate" : 144,
-  "vSync" : false
+  "vSync" : false,
+  "mouseSensitivity" : 0.5
 }

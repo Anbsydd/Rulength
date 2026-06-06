@@ -4,6 +4,7 @@ import config.*;
 import event.EventBus;
 import event.MapTransformEvent;
 import event.StageSizeChange;
+import game.input.RelativeMouse;
 import game.slice.ConfiguredMoveSlice;
 import game.slice.ConfiguredStaticSlice;
 import game.slice.Slice;
@@ -56,6 +57,8 @@ public class Game {
         util.TextLan.load("Simplified Chinese.json");
         // 加载游戏配置
         gameConfig = ConfigLoader.loadConfig(GAME_CONFIG_PATH, GameConfig.class);
+        // 设置相对鼠标灵敏度
+        RelativeMouse.setSensitivity(gameConfig.mouseSensitivity);
         mainPool = new ThreadPoolExecutor(gameConfig.corePoolSize, gameConfig.maxPoolSize, gameConfig.keepAliveSeconds, TimeUnit.SECONDS, new LinkedBlockingQueue<>(gameConfig.queueCapacity), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
         this.stage = stage;
         initRoot();

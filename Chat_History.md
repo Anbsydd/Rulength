@@ -253,3 +253,18 @@
   - exit(Scene) → 显示光标(Cursor.DEFAULT)
   - 相对模式下clampToBoundary调用syncFullDragAnchor不会覆盖lastMouse（通过isActive()判断跳过）
   - StaticSlice的MapTransformEvent订阅者每帧调用released()，所以RelativeMouse.exit()不在released()中调用，而放在addFilters()的MOUSE_RELEASED处理器中
+
+## 对话 26: 修复相对鼠标模式bug + 鼠标灵敏度配置 + 防漂移
+- 时间: 2026-06-06
+- 要求: 修复相对鼠标模式下移动方向错乱、松开鼠标位置不对、极慢移动上飘；新增鼠标灵敏度配置
+- 修改文件:
+  - RelativeMouse.java — enter()不再立即归位（按下时只记录press坐标）；引入warped标记区分"首次归位前(用pressScene累计总位移)"和"首次归位后(用centerScene做帧增量)"；warpBack()由Camera AnimationTimer每帧末尾统一调用（避免事件队列残留产生虚假大增量）；pollDeltaX/Y加DEAD_ZONE=2.0死区过滤（解决Robot.mouseMove整数截断累积漂移）；exit()按"按下时偏移"定位鼠标；新增sensitivity字段和setSensitivity方法（GameConfig注入）
+  - Camera.java — AnimationTimer每帧末尾调用RelativeMouse.warpBack()（不在dragged中直接调用）；cameraDragged相对模式去掉warpBack调用
+  - Slice.java — dragged相对模式去掉warpBack调用
+  - GameConfig.java — 新增mouseSensitivity(double，默认1.0)
+  - gameConfig.json — 新增mouseSensitivity: 1.0
+  - readme.json — 新增mouseSensitivity字段说明
+  - Game.java — 初始化时调用RelativeMouse.setSensitivity(gameConfig.mouseSensitivity)
+- 设计要点:
+  - Robot.mouseMove(int,int)截断小数导致每帧有约0.5px残余，累积成肉眼可见的恒定方向漂移 → DEAD_ZONE=2.0解决
+  - warpBack放在AnimationTimer而不是dragged中，使所有残留事件在同个pulse中用pressScene处理完毕，不会与warp后的事件混淆

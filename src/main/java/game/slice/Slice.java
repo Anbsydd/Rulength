@@ -15,6 +15,7 @@ import javafx.beans.property.StringProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -95,7 +96,7 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
     protected void pressed(MouseEvent e) {
         isDragging = canBeDragged;
         if (isDragging) {
-            RelativeMouse.enter(getScene());
+            RelativeMouse.enter(getScene(), this, e.getSceneX(), e.getSceneY());
         }
         recordXAY(e.getSceneX(), e.getSceneY());
     }
@@ -131,9 +132,11 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
             setMapY(finalTraToMapY(dy / isMoveSlice() + lastTraY));
             // 移动后检测碰撞
             Game.checkCollisions(this);
-            // 只同步拖拽锚点，不同步鼠标锚点（保持lastMouse始终为进入时的中心值）
+            // 屏幕边界约束：防止slice被拖出可视区域
+            clampToScreen();
+            // 只同步拖拽锚点，不同步鼠标锚点（prevEventScene在RelativeMouse中维护）
             syncDragAnchor();
-            RelativeMouse.warpBack();
+            // warpBack由Camera的AnimationTimer每帧末尾统一执行
         } else {
             // 绝对鼠标模式：原有逻辑
             currentDragSceneX = e.getSceneX();
@@ -231,4 +234,28 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
     public double getLastTranslateX() { return lastTraX; }
     /** 获取本次拖拽开始前（或上次clamp后）的translate锚点Y */
     public double getLastTranslateY() { return lastTraY; }
+
+    /**
+     * 将slice约束在场景可视区域内
+     */
+    protected void clampToScreen() {
+        javafx.scene.Scene s = getScene();
+        if (s == null) return;
+        double sW = s.getWidth();
+        double sH = s.getHeight();
+        if (sW <= 0 || sH <= 0) return;
+        Bounds sb = localToScene(getBoundsInLocal());
+        double pullX = 0, pullY = 0;
+        if (sb.getMinX() < 0) pullX = -sb.getMinX();
+        else if (sb.getMaxX() > sW) pullX = sW - sb.getMaxX();
+        if (sb.getMinY() < 0) pullY = -sb.getMinY();
+        else if (sb.getMaxY() > sH) pullY = sH - sb.getMaxY();
+        if (pullX == 0 && pullY == 0) return;
+        // pullX/pullY是场景空间偏移，用isMoveSlice()转换到translate空间
+        // StaticSlice: sceneToTra=zoom，translateSpace = pullX/zoom
+        // MoveSlice:   sceneToTra=1.0，translateSpace = pullX
+        double sceneToTra = isMoveSlice();
+        setMapX(finalTraToMapX(getTranslateX() + pullX / sceneToTra));
+        setMapY(finalTraToMapY(getTranslateY() + pullY / sceneToTra));
+    }
 }
