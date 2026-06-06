@@ -1,5 +1,6 @@
 package game.time;
 
+import config.TimeConfig;
 import event.TickEvent;
 import javafx.animation.AnimationTimer;
 
@@ -8,9 +9,11 @@ import static game.Game.bus;
 /**
  * 游戏刻时钟系统
  * <p>
- * 以固定频率（60 tick/s = 1s=60tick）驱动游戏逻辑更新。
- * 每经过一个游戏刻（约16.67ms），通过EventBus发布TickEvent，
+ * 以固定频率驱动游戏逻辑更新。
+ * 每经过一个游戏刻，通过EventBus发布TickEvent，
  * 所有需要每刻更新的系统订阅TickEvent即可。
+ * <p>
+ * 频率由 TimeConfig 配置，默认 60 tick/s（每刻约16.67ms）。
  * <p>
  * 与Camera的渲染循环（AnimationTimer）独立运行：
  * - Camera: 每帧渲染插值，驱动画面显示
@@ -26,11 +29,11 @@ import static game.Game.bus;
  */
 public class TimeSystem {
 
-    /** 每秒游戏刻数 */
-    public static final long TICKS_PER_SECOND = 60;
+    /** 每秒游戏刻数（从配置注入） */
+    private final long ticksPerSecond;
 
     /** 每刻纳秒间隔 */
-    private static final long TICK_INTERVAL_NANOS = 1_000_000_000L / TICKS_PER_SECOND;
+    private final long tickIntervalNanos;
 
     /** 单例实例 */
     private static TimeSystem instance;
@@ -54,11 +57,13 @@ public class TimeSystem {
     private long lastFpsTime = 0;
     private long fpsTickCount = 0;
 
-    public TimeSystem() {
+    public TimeSystem(TimeConfig config) {
         if (instance != null) {
             throw new IllegalStateException("TimeSystem 已存在实例，请使用 getInstance()");
         }
         instance = this;
+        this.ticksPerSecond = config.ticksPerSecond;
+        this.tickIntervalNanos = 1_000_000_000L / config.ticksPerSecond;
     }
 
     /**
@@ -66,7 +71,7 @@ public class TimeSystem {
      * <p>
      * AnimationTimer 在 JavaFX 线程中每帧调用 handle(long now)，
      * now 为系统纳秒时间（System.nanoTime() 风格）。
-     * 累计时间达到 TICK_INTERVAL_NANOS 时发布一个游戏刻。
+     * 累计时间达到 tickIntervalNanos 时发布一个游戏刻。
      */
     public void start() {
         if (running) return;
@@ -90,8 +95,8 @@ public class TimeSystem {
                 accumulated += elapsed;
 
                 // 按固定间隔消费累积时间
-                while (accumulated >= TICK_INTERVAL_NANOS) {
-                    accumulated -= TICK_INTERVAL_NANOS;
+                while (accumulated >= tickIntervalNanos) {
+                    accumulated -= tickIntervalNanos;
                     tickCount++;
                     fpsTickCount++;
                     // 发布游戏刻事件
@@ -110,7 +115,7 @@ public class TimeSystem {
         };
 
         timer.start();
-        System.out.println("TimeSystem: 已启动，目标 " + TICKS_PER_SECOND + " tick/s");
+        System.out.println("TimeSystem: 已启动，目标 " + ticksPerSecond + " tick/s");
     }
 
     /**
@@ -140,6 +145,13 @@ public class TimeSystem {
      */
     public long getTickCount() {
         return tickCount;
+    }
+
+    /**
+     * 获取目标每秒游戏刻数
+     */
+    public long getTicksPerSecond() {
+        return ticksPerSecond;
     }
 
     /**

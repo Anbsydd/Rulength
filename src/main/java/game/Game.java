@@ -30,6 +30,7 @@ public class Game {
     private static final String GAME_CONFIG_PATH = "assets/config/gameConfig.json";
     private static final String CAMERA_CONFIG_PATH = "assets/config/cameraConfig.json";
     private static final String MINIMAP_CONFIG_PATH = "assets/config/miniMapConfig.json";
+    private static final String TIMESYSTEM_CONFIG_PATH = "assets/config/timeConfig.json";
     // 游戏配置
     private GameConfig gameConfig;
     private SettingsUI settingsUI;
@@ -38,6 +39,8 @@ public class Game {
     public final double ORIGIN_SCENE_HEIGHT;
     public static double multiX = 1.0;
     public static double multiY = 1.0;
+    private game.time.TimeSystem timeSystem;
+
     public Game(Stage stage) throws Exception {
         bus = new EventBus();
         // 加载语言配置
@@ -64,6 +67,7 @@ public class Game {
         root.getChildren().add(move);
         root.getChildren().add(miniMap);
         initSettings();
+        initTimeSystem();
     }
     
     private void initStatic() {
@@ -176,6 +180,17 @@ public class Game {
         PaneSizeManager.add(settingsUI, 1);
         PaneSizeManager.set(settingsUI, root.getWidth(), root.getHeight());
         root.getChildren().add(settingsUI);
+    }
+
+    /**
+     * 加载 TimeConfig 并启动 TimeSystem
+     */
+    private void initTimeSystem() throws Exception {
+        TimeConfig timeConfig = ConfigLoader.loadConfig(TIMESYSTEM_CONFIG_PATH, TimeConfig.class);
+        timeSystem = new game.time.TimeSystem(timeConfig);
+        if (timeConfig.autoStart) {
+            timeSystem.start();
+        }
     }
 
     /**
