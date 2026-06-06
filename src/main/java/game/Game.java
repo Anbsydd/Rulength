@@ -326,7 +326,10 @@ public class Game {
         double dx = curTraX - lastTraX;
         double dy = curTraY - lastTraY;
         double totalLen = Math.sqrt(dx * dx + dy * dy);
-        if (totalLen < 0.5) return;
+        // totalLen 是 translate 空间距离，需转换到场景（鼠标）空间比较
+        // StaticSlice: translateDelta = mouseDelta / zoom，场景距离 = totalLen * zoom
+        // MoveSlice: translateDelta = mouseDelta，场景距离 = totalLen * 1.0
+        if (totalLen * mover.isMoveSlice() < 0.5) return;
 
         // —— 阶段1：二分查找入口点 ——
         // lastTra 是安全的，curTra 是碰撞的；在它们之间找边界
@@ -356,7 +359,7 @@ public class Game {
 
         // 尝试X轴（Y固定在入口点）
         double finalX, finalY;
-        if (Math.abs(remX) > 0.5) {
+        if (Math.abs(remX) * mover.isMoveSlice() > 0.5) {
             mover.setMapX(mover.finalTraToMapX(entryX + remX));
             mover.setMapY(mover.finalTraToMapY(entryY));
             finalX = CollisionUtil.checkCollision(mover, obstructing) ? entryX : entryX + remX;
@@ -365,7 +368,7 @@ public class Game {
         }
 
         // 尝试Y轴（X使用上一步结果）
-        if (Math.abs(remY) > 0.5) {
+        if (Math.abs(remY) * mover.isMoveSlice() > 0.5) {
             mover.setMapX(mover.finalTraToMapX(finalX));
             mover.setMapY(mover.finalTraToMapY(entryY + remY));
             finalY = CollisionUtil.checkCollision(mover, obstructing) ? entryY : entryY + remY;

@@ -42,7 +42,7 @@ public abstract class StaticSlice extends Slice {
     }
 
     @Override
-    protected double isMoveSlice(){
+    public double isMoveSlice(){
         return zoom;
     }
 

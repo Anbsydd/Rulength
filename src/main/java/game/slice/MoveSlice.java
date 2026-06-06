@@ -38,7 +38,7 @@ public abstract class MoveSlice extends Slice {
         super.dragged(e);
     }
     @Override
-    protected double isMoveSlice(){
+    public double isMoveSlice(){
         return 1.0;
     }
     @Override

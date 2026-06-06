@@ -126,7 +126,7 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
         Game.checkCollisions(this);
         syncFullDragAnchor();
     };
-    abstract protected double isMoveSlice();
+    abstract public double isMoveSlice();
     @Override
     public void unload() {
         if (!loaded) return;

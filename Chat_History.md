@@ -223,3 +223,16 @@
   - clampToBoundary从lastTra恢复逐px前进，找到刚好不碰撞的位置
   - syncFullDragAnchor同步lastMouseX/Y，保证鼠标始终粘着slice固定相对位置
   - 持续碰撞期间每帧都触发约束，直到退出碰撞
+
+## 对话 24: 修复放大后两StaticSlice可交叉穿过障碍物
+- 时间: 2026-06-06
+- 要求: 放大(zoom>1)后，两个均有"beHit": "Obstruct"的StaticSlice可以互相穿过
+- 原因: clampToBoundary()中的阈值(totalLen<0.5, Math.abs(remX)>0.5, Math.abs(remY)>0.5)是translate空间值，未考虑StaticSlice的isMoveSlice()=zoom的缩放。zoom≥2时缓慢拖拽产生的translateDelta<0.5，导致clamp直接返回并sync错误锚点，每帧累积穿透
+- 修改文件:
+  - Game.java — clampToBoundary: 早期返回阈值改为 totalLen * mover.isMoveSlice() < 0.5；轴独立滑动阈值改为 Math.abs(remX) * mover.isMoveSlice() > 0.5 和 Math.abs(remY) * mover.isMoveSlice() > 0.5
+  - Slice.java — isMoveSlice()从protected改为public，供Game访问
+  - MoveSlice.java — isMoveSlice()从protected改为public
+  - StaticSlice.java — isMoveSlice()从protected改为public
+- 设计要点:
+  - threshold转换公式: totalLen * mover.isMoveSlice() = translateDelta * (mouseDelta/translateDelta) = mouseDelta场景距离
+  - MoveSlice.isMoveSlice()=1.0，乘以1.0不变，不影响现有行为
