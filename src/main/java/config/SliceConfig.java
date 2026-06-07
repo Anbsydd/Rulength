@@ -22,8 +22,8 @@ public class SliceConfig {
     public double mapY = 0;
     /** 整体透明度，0=全透明，1=不透明 */
     public double opacity = 1.0;
-    /** 实例小ID（对应example中的数字key，如"1", "2"） */
-    public String exampleID;
+    /** 实例小ID（对应地图文件中的id字段） */
+    public int mapId;
 
     /** 文本层配置，控制按钮与文本的各项属性 */
     public TextConfig text = new TextConfig();
@@ -116,7 +116,7 @@ public class SliceConfig {
 
     @Override
     public String toString() {
-        return "SliceConfig{ID='" + ID + "', exampleID='" + exampleID + "', name='" + name + "', moved=" + moved +
+        return "SliceConfig{ID='" + ID + "', mapId=" + mapId + ", name='" + name + "', moved=" + moved +
                 ", text=" + text + ", attributes=" + attributes + ", methods=" + methods + ", event=" + event + "}";
     }
 

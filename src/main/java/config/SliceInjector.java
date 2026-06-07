@@ -8,22 +8,18 @@ import java.util.*;
 
 /**
  * Slice注入工具类
- * 负责读取registry.json中注册的所有slice JSON文件，
- * 自动扫描并加载为SliceConfig对象列表。
+ * <p>
+ * 1. assets/slice/ 中存储默认 slice 定义（平面结构，不含 mapX/Y）
+ * 2. saves/default/map/ 中存储地图实例定义，每个实例引用默认 slice 的 ID
+ * 3. 加载地图时：找到定义 -> 克隆 -> 叠加实例专属属性 -> 注入额外 attributes
  *
- * 每份JSON文件定义一个大类（共享text/methods/event），
- * 内部example层以数字为key定义多个实例，每个实例展开为一个SliceConfig：
+ * Example map JSON:
  * <pre>
- * { "ID": "t2", "name": "测试测试2",
- *   "text": {...},
- *   "methods": {},
- *   "event": {},
- *   "example": {
- *     "1": { "mapX": 500, "mapY": 100, "moved": false, "opacity": 1,
- *            "attributes": { "health": 100, "attack": 10 } },
- *     "2": { ... }
- *   }
- * }
+ * { "slice": [
+ *   { "id": 1, "definition": "Player", "mapX": 200, "mapY": 100 },
+ *   { "id": 2, "definition": "Test",  "mapX": -200, "mapY": 100,
+ *     "attributes": { "health": 100 } }
+ * ]}
  * </pre>
  */
 public class SliceInjector {
@@ -32,99 +28,120 @@ public class SliceInjector {
     private static final String SLICE_DIR = "assets/slice/";
     private static final String REGISTRY_PATH = SLICE_DIR + "registry.json";
 
-    /** 已加载的SliceConfig缓存，key为JSON文件名（不含扩展名），value为该文件的全部实例 */
-    private static final Map<String, List<SliceConfig>> configCache = new LinkedHashMap<>();
+    /** 默认 slice 缓存，key=ID（与文件名一致） */
+    private static final Map<String, SliceConfig> defaultSlices = new LinkedHashMap<>();
+    /** 地图实例 map ID -> config，由 loadMap 填充 */
+    private static final Map<Integer, SliceConfig> mapInstances = new LinkedHashMap<>();
 
     /**
-     * 加载所有注册的slice配置
-     * 每个JSON文件中的example层会被展开为多个SliceConfig
+     * 加载所有注册的默认 slice 配置（仅缓存，不展开实例）
      */
     public static List<SliceConfig> loadAll() throws Exception {
-        configCache.clear();
+        defaultSlices.clear();
 
         String registryJson = new String(Files.readAllBytes(Paths.get(REGISTRY_PATH)));
         Map<String, Object> registryMap = objectMapper.readValue(registryJson, Map.class);
         List<String> sliceFiles = (List<String>) registryMap.get("slices");
 
-        List<SliceConfig> allConfigs = new ArrayList<>();
         for (String fileName : sliceFiles) {
-            List<SliceConfig> configs = loadSliceConfig(SLICE_DIR + fileName);
-            String key = fileName.replace(".json", "");
-            configCache.put(key, configs);
-            allConfigs.addAll(configs);
+            SliceConfig cfg = loadSliceDef(SLICE_DIR + fileName);
+            if (cfg != null) {
+                defaultSlices.put(cfg.ID, cfg);
+            }
         }
-        return allConfigs;
+        return new ArrayList<>(defaultSlices.values());
     }
 
     /**
-     * 加载单个slice配置文件，返回该文件所有example实例
-     * 外层字段（ID, name, text, methods, event）作为共享模板，
-     * example中每个数字key展开为一个SliceConfig
+     * 加载单个 slice 默认配置文件（平面结构）
      */
-    public static List<SliceConfig> loadSliceConfig(String filePath) throws Exception {
+    public static SliceConfig loadSliceDef(String filePath) throws Exception {
         String json = new String(Files.readAllBytes(Paths.get(filePath)));
         Map<String, Object> configMap = objectMapper.readValue(json, Map.class);
 
-        // 提取共享层
-        SliceConfig template = new SliceConfig();
+        SliceConfig cfg = new SliceConfig();
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
             switch (key) {
-                case "ID" -> template.ID = value.toString();
-                case "name" -> template.name = value.toString();
-                case "text" -> injectTextConfig(template, value);
-                case "methods" -> injectMethodMap(template.methods, value);
-                case "event" -> injectMap(template.event, value);
-                // "example" 和未知字段忽略
+                case "ID" -> cfg.ID = value.toString();
+                case "name" -> cfg.name = value.toString();
+                case "moved" -> cfg.moved = Boolean.parseBoolean(value.toString());
+                case "mapX" -> cfg.mapX = ((Number) value).doubleValue();
+                case "mapY" -> cfg.mapY = ((Number) value).doubleValue();
+                case "opacity" -> cfg.opacity = ((Number) value).doubleValue();
+                case "attributes" -> injectMap(cfg.attributes, value);
+                case "text" -> injectTextConfig(cfg, value);
+                case "methods" -> injectMethodMap(cfg.methods, value);
+                case "event" -> injectMap(cfg.event, value);
             }
         }
+        return cfg;
+    }
 
-        // 展开 example 层
-        Object exampleObj = configMap.get("example");
-        if (!(exampleObj instanceof Map)) return Collections.emptyList();
+    /**
+     * 加载地图文件，将定义展开为实例列表
+     *
+     * @param mapPath 地图 JSON 文件路径，如 "saves/default/map/test.json"
+     * @return 实例列表（已在 mapInstances 中缓存）
+     * @throws Exception 文件读取或解析异常
+     */
+    public static List<SliceConfig> loadMap(String mapPath) throws Exception {
+        mapInstances.clear();
 
-        Map<String, Object> exampleMap = (Map<String, Object>) exampleObj;
+        String json = new String(Files.readAllBytes(Paths.get(mapPath)));
+        Map<String, Object> root = objectMapper.readValue(json, Map.class);
+        List<Map<String, Object>> entries = (List<Map<String, Object>>) root.get("slice");
+        if (entries == null) return Collections.emptyList();
+
         List<SliceConfig> results = new ArrayList<>();
+        for (Map<String, Object> entry : entries) {
+            Object defIdObj = entry.get("definition");
+            if (defIdObj == null) continue;
+            String defId = defIdObj.toString();
 
-        for (Map.Entry<String, Object> entry : exampleMap.entrySet()) {
-            String exampleKey = entry.getKey();  // "1", "2" ...
-            Object exampleValue = entry.getValue();
-            if (!(exampleValue instanceof Map)) continue;
-
-            // 从模板克隆
-            SliceConfig cfg = cloneTemplate(template);
-            cfg.exampleID = exampleKey;
-
-            Map<String, Object> instMap = (Map<String, Object>) exampleValue;
-            for (Map.Entry<String, Object> instEntry : instMap.entrySet()) {
-                String instKey = instEntry.getKey();
-                Object instVal = instEntry.getValue();
-                if ("attributes".equals(instKey)) {
-                    injectMap(cfg.attributes, instVal);
-                } else {
-                    injectField(cfg, instKey, instVal);
-                }
+            SliceConfig def = defaultSlices.get(defId);
+            if (def == null) {
+                System.err.println("SliceInjector: 地图引用了未定义的slice ID=" + defId + "，跳过");
+                continue;
             }
+
+            // 克隆默认配置
+            SliceConfig cfg = cloneDef(def);
+
+            // 叠加实例专属字段
+            Object idObj = entry.get("id");
+            if (idObj != null) cfg.mapId = ((Number) idObj).intValue();
+
+            if (entry.containsKey("mapX")) cfg.mapX = ((Number) entry.get("mapX")).doubleValue();
+            if (entry.containsKey("mapY")) cfg.mapY = ((Number) entry.get("mapY")).doubleValue();
+            if (entry.containsKey("opacity")) cfg.opacity = ((Number) entry.get("opacity")).doubleValue();
+
+            // 叠加 attributes（合并到已有默认值上）
+            Object attrObj = entry.get("attributes");
+            if (attrObj instanceof Map) {
+                injectMap(cfg.attributes, attrObj);
+            }
+
+            mapInstances.put(cfg.mapId, cfg);
             results.add(cfg);
         }
         return results;
     }
 
-    /** 从模板克隆出一个新的SliceConfig（浅拷贝字段） */
-    private static SliceConfig cloneTemplate(SliceConfig template) {
+    /** 从默认定义克隆出一个新 SliceConfig */
+    private static SliceConfig cloneDef(SliceConfig def) {
         SliceConfig cfg = new SliceConfig();
-        cfg.ID = template.ID;
-        cfg.name = template.name;
-        cfg.moved = template.moved;
-        cfg.mapX = template.mapX;
-        cfg.mapY = template.mapY;
-        cfg.opacity = template.opacity;
-        // text 共享引用（只读）
-        cfg.text = template.text;
-        // methods/event 浅拷贝 Map
-        cfg.methods.putAll(template.methods);
-        cfg.event.putAll(template.event);
+        cfg.ID = def.ID;
+        cfg.name = def.name;
+        cfg.moved = def.moved;
+        cfg.mapX = def.mapX;
+        cfg.mapY = def.mapY;
+        cfg.opacity = def.opacity;
+        cfg.text = def.text;                         // 共享
+        cfg.attributes.putAll(def.attributes);
+        cfg.methods.putAll(def.methods);
+        cfg.event.putAll(def.event);
         return cfg;
     }
 
@@ -133,8 +150,7 @@ public class SliceInjector {
     @SuppressWarnings("unchecked")
     private static void injectTextConfig(SliceConfig config, Object value) {
         if (!(value instanceof Map)) return;
-        Map<String, Object> textMap = (Map<String, Object>) value;
-        for (Map.Entry<String, Object> entry : textMap.entrySet()) {
+        for (Map.Entry<String, Object> entry : ((Map<String, Object>) value).entrySet()) {
             injectTextField(config.text, entry.getKey(), entry.getValue());
         }
     }
@@ -166,18 +182,6 @@ public class SliceInjector {
         }
     }
 
-    private static void injectField(SliceConfig config, String fieldName, Object value) {
-        try {
-            java.lang.reflect.Field field = SliceConfig.class.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            setFieldValue(field, config, value);
-        } catch (NoSuchFieldException e) {
-            System.err.println("SliceInjector: SliceConfig中不存在字段 '" + fieldName + "': " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("SliceInjector: 无法注入字段 '" + fieldName + "': " + e.getMessage());
-        }
-    }
-
     private static void setFieldValue(java.lang.reflect.Field field, Object obj, Object value) throws IllegalAccessException {
         if (field.getType() == int.class) {
             field.setInt(obj, ((Number) value).intValue());
@@ -194,28 +198,18 @@ public class SliceInjector {
 
     // ==================== 查询 ====================
 
-    /**
-     * 根据文件名（不含扩展名）获取该大类下的第一个实例
-     */
-    public static SliceConfig get(String name) {
-        List<SliceConfig> list = configCache.get(name);
-        return (list != null && !list.isEmpty()) ? list.get(0) : null;
+    public static SliceConfig getDefault(String id) {
+        return defaultSlices.get(id);
     }
 
-    /**
-     * 获取所有已加载的SliceConfig
-     */
+    public static Map<Integer, SliceConfig> getMapInstances() {
+        return new LinkedHashMap<>(mapInstances);
+    }
+
     public static List<SliceConfig> getAll() {
-        List<SliceConfig> all = new ArrayList<>();
-        for (List<SliceConfig> list : configCache.values()) {
-            all.addAll(list);
-        }
-        return all;
+        return new ArrayList<>(defaultSlices.values());
     }
 
-    /**
-     * 重新加载所有slice配置
-     */
     public static List<SliceConfig> reload() throws Exception {
         return loadAll();
     }

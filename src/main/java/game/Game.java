@@ -97,12 +97,15 @@ public class Game {
     }
 
     /**
-     * 通过SliceInjector加载所有slice配置，根据moved字段创建对应的Slice实例
+     * 通过SliceInjector加载默认slice定义，再加载地图文件展开实例
      * moved=true → ConfiguredMoveSlice（跟随地图移动）
      * moved=false → ConfiguredStaticSlice（固定位置）
      */
     private void initSlices() throws Exception {
-        java.util.List<config.SliceConfig> configs = config.SliceInjector.loadAll();
+        // 1. 加载默认 slice 定义（缓存到 SliceInjector）
+        config.SliceInjector.loadAll();
+        // 2. 加载地图文件，展开为实例列表
+        java.util.List<config.SliceConfig> configs = config.SliceInjector.loadMap("saves/default/map/test.json");
         for (config.SliceConfig cfg : configs) {
             game.slice.Slice slice;
             if (cfg.moved) {
@@ -115,7 +118,7 @@ public class Game {
             slice.onLoad();
             allSlices.add(slice);
             // 打印加载信息，便于调试
-            System.out.println("SliceInjector: 已加载 Slice [ID=" + cfg.ID + ", exampleID=" + cfg.exampleID + ", name=" + cfg.name + "] moved=" + cfg.moved + " attributes=" + cfg.attributes + " methods=" + cfg.methods);
+            System.out.println("SliceInjector: 已加载 Slice [ID=" + cfg.ID + ", mapId=" + cfg.mapId + ", name=" + cfg.name + "] moved=" + cfg.moved + " attributes=" + cfg.attributes + " methods=" + cfg.methods);
         }
     }
     

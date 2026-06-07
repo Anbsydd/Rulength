@@ -1,6 +1,14 @@
 {
   "ID": "t2",
   "name": "测试测试2",
+  "mapX": 0,
+  "mapY": 0,
+  "moved": false,
+  "opacity": 1,
+  "attributes": {
+    "health": 100,
+    "attack": 10
+  },
   "text": {
     "fontSize": 20,
     "width": 200,
@@ -18,27 +26,5 @@
     "textColor": "black"
   },
   "methods": {},
-  "event": {},
-  "example": {
-    "1": {
-      "mapX": 500,
-      "mapY": 100,
-      "moved": false,
-      "opacity": 1,
-      "attributes": {
-        "health": 100,
-        "attack": 10
-      }
-    },
-    "2": {
-      "mapX": -200,
-      "mapY": 100,
-      "moved": false,
-      "opacity": 1,
-      "attributes": {
-        "health": 100,
-        "attack": 10
-      }
-    }
-  }
+  "event": {}
 }

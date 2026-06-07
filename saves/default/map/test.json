@@ -1,0 +1,30 @@
+{
+  "slice": [
+    {
+      "id": 1,
+      "definition": "Player",
+      "mapX": 0,
+      "mapY": 0
+    },
+    {
+      "id": 2,
+      "definition": "Test",
+      "mapX": -200,
+      "mapY": 100,
+      "attributes": {
+        "health": 100,
+        "attack": 10
+      }
+    },
+    {
+      "id": 3,
+      "definition": "Test",
+      "mapX": 200,
+      "mapY": 100,
+      "attributes": {
+        "health": 100,
+        "attack": 10
+      }
+    }
+  ]
+}

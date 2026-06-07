@@ -266,16 +266,16 @@
   - assets/textLan/Simplified Chinese.json
   - src/main/java/module-info.java
 
-## 对话 27: Slice配置再重构——example改为数字ID映射多实例
+## 对话 28: 架构重构——assets/slice只存默认定义，地图实例移至saves
 - 时间: 2026-06-07
-- 要求: example内以数字字符串"1","2"为key，每个key内是该实例的完整状态属性（mapX/mapY/moved/opacity/attributes），每个大类JSON可展开为多个实例
+- 要求: assets/slice中只存平面默认定义（ID与文件名一致），移除example层；新增saves/default/map/test.json记录地图实例（definition引用默认ID）；Player ID改为"Player"
 - 实现:
-  - SliceInjector.java — 完全重写：loadSliceConfig返回List<SliceConfig>；example层每个数字key展开为一个独立SliceConfig；引入cloneTemplate()从大类模板克隆，然后注入实例专属字段；exampleID改为String类型（存储数字key）
-  - SliceConfig.java — exampleID字段类型从int改为String
-  - Player.json / Test.json / t2.json — example改为数字ID映射结构
+  - SliceInjector.java — 完全重写：loadAll()只缓存默认定义（loadSliceDef）；新增loadMap()从saves加载地图定义，找到default→克隆→叠加实例mapX/mapY/opacity/attributes；mapId改为int（从地图文件id字段）
+  - SliceConfig.java — exampleID移除，新增mapId（int）；移除example相关注释
+  - t2.json — 移除example层，改为与其他一致的平面结构
+  - Game.java — initSlices先调loadAll()缓存默认，再调loadMap()展开实例
 - 修改文件:
   - src/main/java/config/SliceConfig.java
   - src/main/java/config/SliceInjector.java
-  - assets/slice/Player.json
-  - assets/slice/Test.json
-  - assets/slice/t2.json（用户手动）
+  - assets/slice/t2.json
+  - src/main/java/game/Game.java

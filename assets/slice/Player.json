@@ -1,6 +1,10 @@
 {
-  "ID": "player",
+  "ID": "Player",
   "name": "你",
+  "mapX": 0,
+  "mapY": 0,
+  "moved": true,
+  "opacity": 1,
   "text": {
     "fontSize": 20,
     "width": 30,
@@ -18,16 +22,8 @@
     "hit": "attack"
   },
   "event": {},
-  "example": {
-    "1": {
-      "mapX": 100,
-      "mapY": 100,
-      "moved": true,
-      "opacity": 1,
-      "attributes": {
-        "health": 100,
-        "attack": 10
-      }
-    }
+  "attributes": {
+    "health": 100,
+    "attack": 10
   }
 }

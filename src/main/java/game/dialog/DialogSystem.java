@@ -2,8 +2,6 @@ package game.dialog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import event.StageSizeChange;
-import game.Game;
-import game.slice.Slice;
 import javafx.geometry.Pos;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Label;
@@ -37,8 +35,7 @@ public class DialogSystem extends StackPane {
     // ============ 布局常量 ============
     private static final double BOTTOM_RATIO = 0.4;
     private static final String OVERLAY_STYLE = "-fx-background-color: rgba(0,0,0,0.6);";
-    private static final String AVATAR_FRAME_STYLE =
-            "-fx-border-color: white; -fx-border-width: 2; -fx-background-radius: 8; -fx-border-radius: 8;";
+    private static final String AVATAR_FRAME_STYLE ="";
 
     private static final double AVATAR_SIZE = 120;
     private static final double AVATAR_LEFT = 40;
@@ -176,26 +173,60 @@ public class DialogSystem extends StackPane {
     // ==================== 私有方法 ====================
 
     private void updateAvatar(String speakerRef) {
-        Slice slice = Game.findSliceByName(speakerRef);
-        if (slice == null) {
+        // 通过 name 查找默认配置（不是 ID，dialog 中 speakerRef 是显示名）
+        config.SliceConfig def = null;
+        for (config.SliceConfig d : config.SliceInjector.getAll()) {
+            if (speakerRef.equals(d.name)) {
+                def = d;
+                break;
+            }
+        }
+        if (def == null) {
             avatarFrame.setVisible(false);
             return;
         }
         avatarFrame.setVisible(true);
-        double savedTraX = slice.getTranslateX();
-        double savedTraY = slice.getTranslateY();
-        slice.setTranslateX(0);
-        slice.setTranslateY(0);
+
+        // 创建一个临时 Button，手动应用样式后快照
+        javafx.scene.control.Button temp = new javafx.scene.control.Button(def.name);
+        double w = def.text.width;
+        double h = def.text.height;
+        temp.setPrefSize(w, h);
+        temp.setMaxSize(w, h);
+        temp.setMinSize(w, h);
+
+        StringBuilder style = new StringBuilder();
+        style.append("-fx-background-color: ").append(def.text.backgroundColor).append(";");
+        style.append("-fx-border-color: ").append(def.text.borderColor).append(";");
+        style.append("-fx-border-width: ").append(Math.max(1, (int) Math.round(def.text.borderWidth))).append(";");
+        style.append("-fx-border-radius: ").append(Math.max(0, (int) Math.round(def.text.borderRadius))).append(";");
+        style.append("-fx-background-radius: ").append(Math.max(0, (int) Math.round(def.text.borderRadius))).append(";");
+        style.append("-fx-text-fill: ").append(def.text.textColor).append(";");
+        style.append("-fx-padding: ").append(Math.max(0, (int) Math.round(def.text.insertTop))).append(" ")
+                .append(Math.max(0, (int) Math.round(def.text.insertRight))).append(" ")
+                .append(Math.max(0, (int) Math.round(def.text.insertBottom))).append(" ")
+                .append(Math.max(0, (int) Math.round(def.text.insertLeft))).append(";");
+        style.append("-fx-font-size: ").append(Math.max(1, (int) Math.round(def.text.fontSize))).append("px;");
+        style.append("-fx-focus-color: transparent;");
+        style.append("-fx-faint-focus-color: transparent;");
+        style.append("-fx-highlight-fill: transparent;");
+        temp.setStyle(style.toString());
+        temp.setWrapText(def.text.wrapText);
+        temp.setOpacity(def.opacity);
+
+        // 临时加入场景 → 快照 → 移除
+        overlay.getChildren().add(temp);
         try {
+            temp.applyCss();
+            temp.layout();
             SnapshotParameters sp = new SnapshotParameters();
             sp.setFill(Color.TRANSPARENT);
-            WritableImage snapshot = slice.snapshot(sp, null);
+            WritableImage snapshot = temp.snapshot(sp, null);
             avatarView.setImage(snapshot);
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
-            slice.setTranslateX(savedTraX);
-            slice.setTranslateY(savedTraY);
+            overlay.getChildren().remove(temp);
         }
     }
 
