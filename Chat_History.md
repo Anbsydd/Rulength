@@ -250,34 +250,34 @@
   - 实际效果：鼠标光标始终和player保持在同一相对位置，拖动过程不会出现手和player分离的感觉
   - MoveSlice.isMoveSlice()=1.0，乘以1.0不变，不影响现有行为
 
-## 对话 25: 相对鼠标模式 (Relative Mouse Mode)
-- 时间: 2026-06-06
-- 要求: 拖拽时（左键拖Slice + 右键拖地图）隐藏鼠标、鼠标不受窗口边界限制、可无限移动、获取鼠标增量(dx/dy)、Robot每帧将鼠标拉回窗口中心
-- 新增文件:
-  - game/input/RelativeMouse.java — 相对鼠标模式工具类，封装Robot归位、鼠标隐藏/显示、增量计算
+## 对话 25: 添加对话系统
+- 时间: 2026-06-07
+- 要求: 添加叙事对话系统，底部40%黑色半透明蒙版，显示说话者Slice快照，宋体文本框，使用assets/dialog/存储对话JSON
+- 实现:
+  - assets/dialog/test.json — 示例对话文件，speakerRef引用Player（slice name="你"），text指向TextLan key
+  - DialogSystem — StackPane全屏覆盖层，底部40%黑色半透明蒙版；通过slice.snapshot()拍摄说话者slice快照作为头像；使用宋体（SimSun）；点击任意位置推进对话；支持StageSizeChange动态调整布局
+  - Game.java — 新增 initDialogSystem() 初始化并添加到root最顶层；新增 findSliceByName() 静态方法供DialogSystem通过slice名查找
+  - Simplified Chinese.json — 新增 DialogSystem_Test1 键值对
+  - module-info.java — 新增 exports game.dialog; opens game.dialog to com.fasterxml.jackson.databind;
 - 修改文件:
-  - Slice.java — pressed()进入相对模式；dragged()分支：相对模式用增量+syncDragAnchor（不同步鼠标锚点）；addFilters()中MOUSE_RELEASED处理器退出相对模式（防止StaticSlice的MapTransformEvent订阅者每帧触发released干扰）；syncFullDragAnchor在相对模式下跳过更新lastMouse
-  - Camera.java — cameraPressed/cameraDragged/cameraReleased接入相对鼠标模式；cameraDragged相对模式用增量累积targetOffsetX/Y
-  - module-info.java — 添加requires java.desktop（java.awt.Robot所需）
-- 设计要点:
-  - RelativeMouse.enter(Scene) → 隐藏光标(Cursor.NONE)，Robot归位到窗口中心，记录centerSceneX/Y
-  - pollDeltaX/Y(event) → event.getSceneX() - centerSceneX，即从窗口中心的帧增量
-  - warpBack() → 每次dragged末尾调用Robot.mouseMove将OS光标拉回窗口中心，产生持续偏移
-  - exit(Scene) → 显示光标(Cursor.DEFAULT)
-  - 相对模式下clampToBoundary调用syncFullDragAnchor不会覆盖lastMouse（通过isActive()判断跳过）
-  - StaticSlice的MapTransformEvent订阅者每帧调用released()，所以RelativeMouse.exit()不在released()中调用，而放在addFilters()的MOUSE_RELEASED处理器中
+  - assets/dialog/test.json（新建）
+  - src/main/java/game/dialog/DialogSystem.java（新建）
+  - src/main/java/game/Game.java
+  - assets/textLan/Simplified Chinese.json
+  - src/main/java/module-info.java
 
-## 对话 26: 修复相对鼠标模式bug + 鼠标灵敏度配置 + 防漂移
-- 时间: 2026-06-06
-- 要求: 修复相对鼠标模式下移动方向错乱、松开鼠标位置不对、极慢移动上飘；新增鼠标灵敏度配置
+## 对话 26: Slice配置重构——新增ID和example层
+- 时间: 2026-06-07
+- 要求: 每个大类（一种slice）有一个外层ID，每个实例有example层中的小ID；moved/mapX/mapY/opacity/attributes从外层移到example层
+- 实现:
+  - SliceConfig.java — 新增 ID（大类ID）和 exampleID（实例小ID）字段；外层保留ID、name、text、methods、event；example层注入moved、mapX、mapY、opacity、attributes、ID（映射到exampleID）
+  - SliceInjector.java — OUTER_FIELDS改为只含ID、name；新增injectExampleConfig()处理example层；不再处理顶层attributes（移至example内）
+  - Player.json / Test.json / t2.json — 按新结构迁移：外层加ID字段，moved/mapX/mapY/opacity/attributes移入example层
+  - Game.java — 日志输出增加 ID/exampleID 信息
 - 修改文件:
-  - RelativeMouse.java — enter()不再立即归位（按下时只记录press坐标）；引入warped标记区分"首次归位前(用pressScene累计总位移)"和"首次归位后(用centerScene做帧增量)"；warpBack()由Camera AnimationTimer每帧末尾统一调用（避免事件队列残留产生虚假大增量）；pollDeltaX/Y加DEAD_ZONE=2.0死区过滤（解决Robot.mouseMove整数截断累积漂移）；exit()按"按下时偏移"定位鼠标；新增sensitivity字段和setSensitivity方法（GameConfig注入）
-  - Camera.java — AnimationTimer每帧末尾调用RelativeMouse.warpBack()（不在dragged中直接调用）；cameraDragged相对模式去掉warpBack调用
-  - Slice.java — dragged相对模式去掉warpBack调用
-  - GameConfig.java — 新增mouseSensitivity(double，默认1.0)
-  - gameConfig.json — 新增mouseSensitivity: 1.0
-  - readme.json — 新增mouseSensitivity字段说明
-  - Game.java — 初始化时调用RelativeMouse.setSensitivity(gameConfig.mouseSensitivity)
-- 设计要点:
-  - Robot.mouseMove(int,int)截断小数导致每帧有约0.5px残余，累积成肉眼可见的恒定方向漂移 → DEAD_ZONE=2.0解决
-  - warpBack放在AnimationTimer而不是dragged中，使所有残留事件在同个pulse中用pressScene处理完毕，不会与warp后的事件混淆
+  - src/main/java/config/SliceConfig.java
+  - src/main/java/config/SliceInjector.java
+  - assets/slice/Player.json
+  - assets/slice/Test.json（用户手动）
+  - assets/slice/t2.json
+  - src/main/java/game/Game.java

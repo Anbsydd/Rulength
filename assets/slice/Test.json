@@ -1,9 +1,6 @@
 {
+  "ID": "test1",
   "name": "测试测试",
-  "moved": false,
-  "mapX": -100,
-  "mapY": -100,
-  "opacity": 1,
   "text": {
     "fontSize": 20,
     "width": 200,
@@ -20,12 +17,20 @@
     "backgroundColor": "rgba(0,0,0,0)",
     "textColor": "black"
   },
-  "attributes": {
-    "health": 100,
-    "attack": 10
-  },
   "methods": {
     "beHit": "Obstruct"
   },
-  "event": {}
+  "event": {},
+  "example": {
+    "ID": 1,
+    "mapX": -100,
+    "mapY": -100,
+    "moved": false,
+    "opacity": 1,
+    
+    "attributes": {
+      "health": 100,
+      "attack": 10
+    }
+  }
 }

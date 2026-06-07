@@ -2,36 +2,36 @@ package util;
 
 
 import event.StageSizeChange;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 
 import static game.Game.bus;
 
 public class PaneSizeManager {
-    public static void add(Pane pane, double widthMultiply, double heightMultiply) {
+    public static void add(Region region, double widthMultiply, double heightMultiply) {
         bus.subscribe(StageSizeChange.class, (StageSizeChange event) -> {
-            pane.setMaxWidth(event.width()*widthMultiply);
-            pane.setMaxHeight(event.height()*heightMultiply);
-            pane.setMinWidth(event.width()*widthMultiply);
-            pane.setMinHeight(event.height()*heightMultiply);
-            pane.setPrefWidth(event.width()*widthMultiply);
-            pane.setPrefHeight(event.height()*heightMultiply);
+            region.setMaxWidth(event.width()*widthMultiply);
+            region.setMaxHeight(event.height()*heightMultiply);
+            region.setMinWidth(event.width()*widthMultiply);
+            region.setMinHeight(event.height()*heightMultiply);
+            region.setPrefWidth(event.width()*widthMultiply);
+            region.setPrefHeight(event.height()*heightMultiply);
         });
     }
-    public static void add(Pane pane, double multiply) {
-        add(pane, multiply, multiply);
+    public static void add(Region region, double multiply) {
+        add(region, multiply, multiply);
     }
-    public static void set(Pane pane, double width, double height, double widthMultiply, double heightMultiply) {
-        pane.setMaxWidth(width*widthMultiply);
-        pane.setMaxHeight(height*heightMultiply);
-        pane.setMinWidth(width*widthMultiply);
-        pane.setMinHeight(height*heightMultiply);
-        pane.setPrefWidth(width*widthMultiply);
-        pane.setPrefHeight(height*heightMultiply);
+    public static void set(Region region, double width, double height, double widthMultiply, double heightMultiply) {
+        region.setMaxWidth(width*widthMultiply);
+        region.setMaxHeight(height*heightMultiply);
+        region.setMinWidth(width*widthMultiply);
+        region.setMinHeight(height*heightMultiply);
+        region.setPrefWidth(width*widthMultiply);
+        region.setPrefHeight(height*heightMultiply);
     }
-    public static void set(Pane pane, double width, double height, double multiply) {
-        set(pane, width, height, multiply, multiply);
+    public static void set(Region region, double width, double height, double multiply) {
+        set(region, width, height, multiply, multiply);
     }
-    public static void set(Pane pane, double width, double height) {
-        set(pane, width, height, 1);
+    public static void set(Region region, double width, double height) {
+        set(region, width, height, 1);
     }
 }

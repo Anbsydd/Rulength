@@ -29,7 +29,7 @@ public class SliceInjector {
 
     /** SliceConfig外层字段名集合，用于区分外层字段和嵌套层 */
     private static final Set<String> OUTER_FIELDS = Set.of(
-            "name", "moved", "mapX", "mapY", "opacity"
+            "ID", "name"
     );
 
     /**
@@ -60,14 +60,24 @@ public class SliceInjector {
     /**
      * 加载单个slice配置文件
      * 分层结构：
-     * - 外层字段（name, moved, mapX, mapY, opacity）通过反射注入SliceConfig字段
+     * - 外层字段（ID, name）通过反射注入SliceConfig字段
      * - text层：嵌套对象，通过反射注入TextConfig字段
-     * - attributes层：嵌套对象，直接存入attributes Map
-     * - methods层：嵌套对象，直接存入methods Map
-     * - event层：嵌套对象，直接存入event Map
-     * @param filePath JSON文件路径
-     * @return 填充好的SliceConfig对象
-     * @throws Exception 文件读取或解析异常
+     * - methods层：嵌套对象，存入methods Map
+     * - event层：嵌套对象，存入event Map
+     * - example层：实例专属配置，内嵌ID、moved、mapX、mapY、opacity、attributes
+     *
+     * Example JSON格式：
+     * <pre>
+     * { "ID": "test1", "name": "测试测试",
+     *   "text": {...}, "methods": {...}, "event": {},
+     *   "example": {
+     *     "ID": 1,
+     *     "mapX": -100, "mapY": -100,
+     *     "moved": false, "opacity": 1,
+     *     "attributes": { "health": 100, "attack": 10 }
+     *   }
+     * }
+     * </pre>
      */
     public static SliceConfig loadSliceConfig(String filePath) throws Exception {
         String json = new String(Files.readAllBytes(Paths.get(filePath)));
@@ -86,15 +96,15 @@ public class SliceInjector {
             } else if ("text".equals(key)) {
                 // text层：解析嵌套对象，注入TextConfig
                 injectTextConfig(config, value);
-            } else if ("attributes".equals(key)) {
-                // attributes层：解析嵌套对象，存入attributes Map
-                injectMap(config.attributes, value);
             } else if ("methods".equals(key)) {
                 // methods层：解析嵌套对象，存入methods Map
                 injectMethodMap(config.methods, value);
             } else if ("event".equals(key)) {
                 // event层：解析嵌套对象，存入event Map
                 injectMap(config.event, value);
+            } else if ("example".equals(key)) {
+                // example层：解析实例专属配置
+                injectExampleConfig(config, value);
             }
             // 未知字段忽略
         }
@@ -157,6 +167,32 @@ public class SliceInjector {
         Map<String, Object> sourceMap = (Map<String, Object>) value;
         for (Map.Entry<String, Object> entry : sourceMap.entrySet()) {
             map.put(entry.getKey(), entry.getValue() != null ? entry.getValue().toString() : null);
+        }
+    }
+
+    /**
+     * 解析example嵌套对象，注入实例专属配置
+     * example层包含：ID（实例小ID）、moved、mapX、mapY、opacity、attributes
+     * @param config 目标SliceConfig对象
+     * @param value example层的JSON值（应为Map）
+     */
+    @SuppressWarnings("unchecked")
+    private static void injectExampleConfig(SliceConfig config, Object value) {
+        if (!(value instanceof Map)) return;
+        Map<String, Object> exampleMap = (Map<String, Object>) value;
+        for (Map.Entry<String, Object> entry : exampleMap.entrySet()) {
+            String key = entry.getKey();
+            Object val = entry.getValue();
+            if ("attributes".equals(key)) {
+                // attributes：合并到config.attributes Map
+                injectMap(config.attributes, val);
+            } else if ("ID".equals(key)) {
+                // 实例小ID
+                config.exampleID = ((Number) val).intValue();
+            } else {
+                // moved、mapX、mapY、opacity：通过反射注入SliceConfig字段
+                injectField(config, key, val);
+            }
         }
     }
 

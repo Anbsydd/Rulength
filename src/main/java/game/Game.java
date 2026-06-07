@@ -4,7 +4,7 @@ import config.*;
 import event.EventBus;
 import event.MapTransformEvent;
 import event.StageSizeChange;
-import game.input.RelativeMouse;
+import game.dialog.DialogSystem;
 import game.slice.ConfiguredMoveSlice;
 import game.slice.ConfiguredStaticSlice;
 import game.slice.Slice;
@@ -50,6 +50,7 @@ public class Game {
     public static double multiX = 1.0;
     public static double multiY = 1.0;
     private game.time.TimeSystem timeSystem;
+    private DialogSystem dialogSystem;
 
     public Game(Stage stage) throws Exception {
         bus = new EventBus();
@@ -57,8 +58,6 @@ public class Game {
         util.TextLan.load("Simplified Chinese.json");
         // 加载游戏配置
         gameConfig = ConfigLoader.loadConfig(GAME_CONFIG_PATH, GameConfig.class);
-        // 设置相对鼠标灵敏度
-        RelativeMouse.setSensitivity(gameConfig.mouseSensitivity);
         mainPool = new ThreadPoolExecutor(gameConfig.corePoolSize, gameConfig.maxPoolSize, gameConfig.keepAliveSeconds, TimeUnit.SECONDS, new LinkedBlockingQueue<>(gameConfig.queueCapacity), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
         this.stage = stage;
         initRoot();
@@ -79,6 +78,7 @@ public class Game {
         root.getChildren().add(move);
         root.getChildren().add(miniMap);
         initSettings();
+        initDialogSystem();
         initTimeSystem();
     }
     
@@ -115,7 +115,7 @@ public class Game {
             slice.onLoad();
             allSlices.add(slice);
             // 打印加载信息，便于调试
-            System.out.println("SliceInjector: 已加载 Slice [" + cfg.name + "] moved=" + cfg.moved + " attributes=" + cfg.attributes + " methods=" + cfg.methods);
+            System.out.println("SliceInjector: 已加载 Slice [ID=" + cfg.ID + ", exampleID=" + cfg.exampleID + ", name=" + cfg.name + "] moved=" + cfg.moved + " attributes=" + cfg.attributes + " methods=" + cfg.methods);
         }
     }
     
@@ -193,6 +193,28 @@ public class Game {
         PaneSizeManager.add(settingsUI, 1);
         PaneSizeManager.set(settingsUI, root.getWidth(), root.getHeight());
         root.getChildren().add(settingsUI);
+    }
+
+    private void initDialogSystem() {
+        dialogSystem = new DialogSystem();
+        PaneSizeManager.add(dialogSystem, 1,0.4);
+        root.getChildren().add(dialogSystem);
+        // 延迟一帧显示示例对话（等布局完成后）
+        javafx.application.Platform.runLater(() ->
+                dialogSystem.showDialog("assets/dialog/test.json")
+        );
+    }
+
+    /**
+     * 根据名称在所有已加载的 Slice 中查找
+     */
+    public static Slice findSliceByName(String name) {
+        for (Slice slice : allSlices) {
+            if (name.equals(slice.getName())) {
+                return slice;
+            }
+        }
+        return null;
     }
 
     /**

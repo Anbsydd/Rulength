@@ -1,0 +1,9 @@
+{
+  "dialogs": [
+    {
+      "id": "1",
+      "speakerRef": "你",
+      "text": "DialogSystem_Test1"
+    }
+  ]
+}

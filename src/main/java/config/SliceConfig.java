@@ -6,13 +6,12 @@ import java.util.Map;
 /**
  * Slice配置类，支持从JSON文件自动注入属性
  * 分层结构：
- * - 外层：name, moved, mapX, mapY, opacity（整体属性）
- * - text层：控制按钮与文本的渲染属性（fontSize, width, height等）
- * - attributes层：记录slice的额外属性（如health, attack）
- * - methods层：记录slice可调用的方法映射（如 hit → attack）
- * - event层：记录每个游戏刻需要更新的事件
+ * - 外层：ID（大类ID）, name, text, methods, event
+ * - example层：每个实例的ID、moved、mapX、mapY、opacity、attributes
  */
 public class SliceConfig {
+    /** 大类ID（对应JSON外层ID字段） */
+    public String ID;
     /** Slice名称 */
     public String name;
     /** 是否可移动，决定继承MoveSlice还是StaticSlice */
@@ -23,6 +22,8 @@ public class SliceConfig {
     public double mapY = 0;
     /** 整体透明度，0=全透明，1=不透明 */
     public double opacity = 1.0;
+    /** 实例小ID（对应example中的ID） */
+    public int exampleID;
 
     /** 文本层配置，控制按钮与文本的各项属性 */
     public TextConfig text = new TextConfig();
