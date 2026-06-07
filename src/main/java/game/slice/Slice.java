@@ -138,7 +138,10 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
         // 递归守卫：跳过由Robot.mouseMove触发的drag事件
         if (cursorCorrecting) {
             cursorCorrecting = false;
-            syncFullDragAnchor();
+            // 只同步translate锚点（适应可能的位置微小变化）
+            lastTraX = getTranslateX();
+            lastTraY = getTranslateY();
+            // 保持 lastMouseX/Y 不变（已在主路径设为了修正后的场景坐标）
             return;
         }
 
@@ -156,18 +159,45 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
         // 移动后检测碰撞（可能会通过clampToBoundary修改位置）
         Game.checkCollisions(this);
 
-        syncFullDragAnchor();
+        double actualTraX = getTranslateX();
+        double actualTraY = getTranslateY();
+        double deltaTraX = actualTraX - intendedTraX;
+        double deltaTraY = actualTraY - intendedTraY;
+        boolean wasClamped = (Math.abs(deltaTraX) >= 0.5 || Math.abs(deltaTraY) >= 0.5);
 
-        // 如果碰撞阻挡导致实际translate与期望不一致，同步修正系统光标
-        double deltaTraX = getTranslateX() - intendedTraX;
-        double deltaTraY = getTranslateY() - intendedTraY;
-        if ((Math.abs(deltaTraX) >= 0.5 || Math.abs(deltaTraY) >= 0.5) && robot != null) {
-            double correctedSceneX = (getTranslateX() - oldTraX) * isMoveSlice() + oldMouseX;
-            double correctedSceneY = (getTranslateY() - oldTraY) * isMoveSlice() + oldMouseY;
-            double targetScreenX = currentDragScreenX + (correctedSceneX - currentDragSceneX);
-            double targetScreenY = currentDragScreenY + (correctedSceneY - currentDragSceneY);
-            cursorCorrecting = true;
-            robot.mouseMove((int) Math.round(targetScreenX), (int) Math.round(targetScreenY));
+        if (wasClamped) {
+            // —— 被阻挡了 ——
+            // 分轴处理：被阻挡的轴"吃掉"鼠标位移，可滑动的轴正常前进
+            lastTraX = actualTraX;
+            lastTraY = actualTraY;
+
+            if (Math.abs(deltaTraX) >= 0.5) {
+                // X轴被阻挡，不更新鼠标锚点 → 下一帧X轴位移被吃光
+                lastMouseX = oldMouseX;
+            } else {
+                // X轴可滑动，正常更新鼠标锚点
+                lastMouseX = (actualTraX - oldTraX) * isMoveSlice() + oldMouseX;
+            }
+            if (Math.abs(deltaTraY) >= 0.5) {
+                // Y轴被阻挡，不更新鼠标锚点
+                lastMouseY = oldMouseY;
+            } else {
+                // Y轴可滑动，正常更新
+                lastMouseY = (actualTraY - oldTraY) * isMoveSlice() + oldMouseY;
+            }
+
+            // 把系统光标拉回到修正后的位置
+            if (robot != null) {
+                double targetScreenX = currentDragScreenX + (lastMouseX - currentDragSceneX);
+                double targetScreenY = currentDragScreenY + (lastMouseY - currentDragSceneY);
+                currentDragSceneX = lastMouseX;
+                currentDragSceneY = lastMouseY;
+                cursorCorrecting = true;
+                robot.mouseMove((int) Math.round(targetScreenX), (int) Math.round(targetScreenY));
+            }
+        } else {
+            // —— 没有阻挡 ——
+            syncFullDragAnchor();
         }
     }
     abstract public double isMoveSlice();
