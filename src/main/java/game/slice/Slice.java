@@ -7,7 +7,6 @@ import event.input.MousePressed;
 import event.input.MouseReleased;
 import event.input.MouseScrolled;
 import game.Game;
-import game.input.RelativeMouse;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,11 +14,12 @@ import javafx.beans.property.StringProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
-import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+
+import java.awt.*;
 
 import static game.Game.bus;
 
@@ -34,6 +34,13 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
     /** 当前拖拽事件的鼠标场景坐标，供Obstruct等外部约束使用 */
     protected double currentDragSceneX;
     protected double currentDragSceneY;
+    /** 当前拖拽事件的鼠标屏幕坐标，用于Robot移动系统光标 */
+    protected double currentDragScreenX;
+    protected double currentDragScreenY;
+    /** 阻止Robot.mouseMove循环触发dragged的递归守卫 */
+    private boolean cursorCorrecting = false;
+    /** java.awt.Robot 实例，用于同步操作系统光标位置 */
+    private Robot robot;
     protected DoubleProperty mapX;
     protected DoubleProperty mapY;
     boolean isDragging = false;
@@ -44,6 +51,8 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
         super();
         // 取消按钮默认的焦点光环和按下发光效果
         setFocusTraversable(false);
+        // 初始化 AWT Robot
+        try { robot = new Robot(); } catch (AWTException ignored) {}
         mapX = new SimpleDoubleProperty(0);
         mapY = new SimpleDoubleProperty(0);
         name.addListener((observable, oldValue, newValue) -> setText(newValue));
@@ -84,7 +93,7 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
             if (e.getButton() == MouseButton.SECONDARY) bus.publish(new MouseDragged(e));
         };
         EventHandler<MouseEvent> released = e -> {
-            if (e.getButton() == MouseButton.PRIMARY) { released(); RelativeMouse.exit(getScene()); }
+            if (e.getButton() == MouseButton.PRIMARY) released();
             if (e.getButton() == MouseButton.SECONDARY) bus.publish(new MouseReleased(e));
         };
         addAndRegisterEventFilter(ScrollEvent.SCROLL, scrolled);
@@ -95,9 +104,8 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
 
     protected void pressed(MouseEvent e) {
         isDragging = canBeDragged;
-        if (isDragging) {
-            RelativeMouse.enter(getScene(), this, e.getSceneX(), e.getSceneY());
-        }
+        currentDragScreenX = e.getScreenX();
+        currentDragScreenY = e.getScreenY();
         recordXAY(e.getSceneX(), e.getSceneY());
     }
 
@@ -120,34 +128,48 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
         setTranslateY(finalMapToTraY(mapY.doubleValue()));
     }
 
-    protected void dragged(MouseEvent e){
-
+    protected void dragged(MouseEvent e) {
         if (!isDragging) return;
+        currentDragSceneX = e.getSceneX();
+        currentDragSceneY = e.getSceneY();
+        currentDragScreenX = e.getScreenX();
+        currentDragScreenY = e.getScreenY();
 
-        if (RelativeMouse.isActive()) {
-            // 相对鼠标模式：用增量计算位移
-            double dx = RelativeMouse.pollDeltaX(e);
-            double dy = RelativeMouse.pollDeltaY(e);
-            setMapX(finalTraToMapX(dx / isMoveSlice() + lastTraX));
-            setMapY(finalTraToMapY(dy / isMoveSlice() + lastTraY));
-            // 移动后检测碰撞
-            Game.checkCollisions(this);
-            // 屏幕边界约束：防止slice被拖出可视区域
-            clampToScreen();
-            // 只同步拖拽锚点，不同步鼠标锚点（prevEventScene在RelativeMouse中维护）
-            syncDragAnchor();
-            // warpBack由Camera的AnimationTimer每帧末尾统一执行
-        } else {
-            // 绝对鼠标模式：原有逻辑
-            currentDragSceneX = e.getSceneX();
-            currentDragSceneY = e.getSceneY();
-            setMapX(finalTraToMapX((currentDragSceneX - lastMouseX)/isMoveSlice() + lastTraX));
-            setMapY(finalTraToMapY((currentDragSceneY - lastMouseY)/isMoveSlice() + lastTraY));
-            // 移动后检测碰撞
-            Game.checkCollisions(this);
+        // 递归守卫：跳过由Robot.mouseMove触发的drag事件
+        if (cursorCorrecting) {
+            cursorCorrecting = false;
             syncFullDragAnchor();
+            return;
         }
-    };
+
+        // 保存本次拖拽锚点（修正光标时需要）
+        double oldTraX = lastTraX;
+        double oldTraY = lastTraY;
+        double oldMouseX = lastMouseX;
+        double oldMouseY = lastMouseY;
+
+        double intendedTraX = (currentDragSceneX - oldMouseX) / isMoveSlice() + oldTraX;
+        double intendedTraY = (currentDragSceneY - oldMouseY) / isMoveSlice() + oldTraY;
+
+        setMapX(finalTraToMapX(intendedTraX));
+        setMapY(finalTraToMapY(intendedTraY));
+        // 移动后检测碰撞（可能会通过clampToBoundary修改位置）
+        Game.checkCollisions(this);
+
+        syncFullDragAnchor();
+
+        // 如果碰撞阻挡导致实际translate与期望不一致，同步修正系统光标
+        double deltaTraX = getTranslateX() - intendedTraX;
+        double deltaTraY = getTranslateY() - intendedTraY;
+        if ((Math.abs(deltaTraX) >= 0.5 || Math.abs(deltaTraY) >= 0.5) && robot != null) {
+            double correctedSceneX = (getTranslateX() - oldTraX) * isMoveSlice() + oldMouseX;
+            double correctedSceneY = (getTranslateY() - oldTraY) * isMoveSlice() + oldMouseY;
+            double targetScreenX = currentDragScreenX + (correctedSceneX - currentDragSceneX);
+            double targetScreenY = currentDragScreenY + (correctedSceneY - currentDragSceneY);
+            cursorCorrecting = true;
+            robot.mouseMove((int) Math.round(targetScreenX), (int) Math.round(targetScreenY));
+        }
+    }
     abstract public double isMoveSlice();
     @Override
     public void unload() {
@@ -218,44 +240,16 @@ public abstract class Slice extends Button implements LifeCycled, TextSized, Coo
     /**
      * 被外部强制移动后同步所有拖拽锚点（包括鼠标场景坐标），
      * 保证鼠标始终拖拽着slice的固定相对位置
-     * <p>
-     * 相对鼠标模式下不更新鼠标锚点（防止破坏center基准），由exit()统一清理
      */
     public void syncFullDragAnchor() {
         lastTraX = getTranslateX();
         lastTraY = getTranslateY();
-        if (!RelativeMouse.isActive()) {
-            lastMouseX = currentDragSceneX;
-            lastMouseY = currentDragSceneY;
-        }
+        lastMouseX = currentDragSceneX;
+        lastMouseY = currentDragSceneY;
     }
 
     /** 获取本次拖拽开始前（或上次clamp后）的translate锚点X */
     public double getLastTranslateX() { return lastTraX; }
     /** 获取本次拖拽开始前（或上次clamp后）的translate锚点Y */
     public double getLastTranslateY() { return lastTraY; }
-
-    /**
-     * 将slice约束在场景可视区域内
-     */
-    protected void clampToScreen() {
-        javafx.scene.Scene s = getScene();
-        if (s == null) return;
-        double sW = s.getWidth();
-        double sH = s.getHeight();
-        if (sW <= 0 || sH <= 0) return;
-        Bounds sb = localToScene(getBoundsInLocal());
-        double pullX = 0, pullY = 0;
-        if (sb.getMinX() < 0) pullX = -sb.getMinX();
-        else if (sb.getMaxX() > sW) pullX = sW - sb.getMaxX();
-        if (sb.getMinY() < 0) pullY = -sb.getMinY();
-        else if (sb.getMaxY() > sH) pullY = sH - sb.getMaxY();
-        if (pullX == 0 && pullY == 0) return;
-        // pullX/pullY是场景空间偏移，用isMoveSlice()转换到translate空间
-        // StaticSlice: sceneToTra=zoom，translateSpace = pullX/zoom
-        // MoveSlice:   sceneToTra=1.0，translateSpace = pullX
-        double sceneToTra = isMoveSlice();
-        setMapX(finalTraToMapX(getTranslateX() + pullX / sceneToTra));
-        setMapY(finalTraToMapY(getTranslateY() + pullY / sceneToTra));
-    }
 }

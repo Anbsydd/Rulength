@@ -3,6 +3,7 @@ module Rulength {
     requires javafx.fxml;
     requires javafx.web;
     requires javafx.swing;
+    requires java.desktop;
     requires com.fasterxml.jackson.databind;
     requires java.desktop;
 

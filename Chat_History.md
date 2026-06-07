@@ -235,6 +235,19 @@
   - StaticSlice.java — isMoveSlice()从protected改为public
 - 设计要点:
   - threshold转换公式: totalLen * mover.isMoveSlice() = translateDelta * (mouseDelta/translateDelta) = mouseDelta场景距离
+
+## 对话 24: Obstruct阻挡后鼠标光标同步回退
+- 时间: 2026-06-07
+- 要求: 拖动player遇到Obstruct阻挡后，鼠标光标也跟player一样被阻挡，不继续向前走
+- 问题: clampToBoundary修正了slice位置，但系统鼠标光标继续往前，导致下一次dragged()光标和player分离
+- 方案: Robot.mouseMove 在clamp后将系统光标同步移回正确位置。计算逻辑：阻挡后的实际translate → 反推鼠标场景坐标 → screen差值修正
+- 修改文件:
+  - Slice.java — 新增 robot 字段（AWT）及 cursorCorrecting 递归守卫；pressed/dragged 中保存 screenX/Y；clamp后计算delta，若实际translate≠期望则回调光标位置
+  - module-info.java — 添加 requires java.desktop（使用java.awt.Robot需要）
+- 设计要点:
+  - 递归守卫：Robot.mouseMove会再次触发JavaFX drag事件，通过cursorCorrecting标志跳过本次调用
+  - 坐标计算：修正后的cursor位置 = currentDragScreen + ((actualTranslate - oldTra) * isMoveSlice + oldMouse - currentDragScene)
+  - 实际效果：鼠标光标始终和player保持在同一相对位置，拖动过程不会出现手和player分离的感觉
   - MoveSlice.isMoveSlice()=1.0，乘以1.0不变，不影响现有行为
 
 ## 对话 25: 相对鼠标模式 (Relative Mouse Mode)

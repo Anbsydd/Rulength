@@ -25,7 +25,6 @@
     "attack": 10
   },
   "methods": {
-    "beHit": "Obstruct"
   },
   "event": {}
 }
