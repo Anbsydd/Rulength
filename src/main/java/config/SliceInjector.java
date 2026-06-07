@@ -9,114 +9,127 @@ import java.util.*;
 /**
  * Slice注入工具类
  * 负责读取registry.json中注册的所有slice JSON文件，
- * 自动扫描并加载为SliceConfig对象，支持分层结构注入：
- * - 外层字段：name, moved, mapX, mapY, opacity
- * - text层：嵌套对象，映射到TextConfig
- * - attributes层：嵌套对象，映射到attributes Map
- * - methods层：嵌套对象，映射到methods Map
- * - event层：嵌套对象，映射到event Map
+ * 自动扫描并加载为SliceConfig对象列表。
+ *
+ * 每份JSON文件定义一个大类（共享text/methods/event），
+ * 内部example层以数字为key定义多个实例，每个实例展开为一个SliceConfig：
+ * <pre>
+ * { "ID": "t2", "name": "测试测试2",
+ *   "text": {...},
+ *   "methods": {},
+ *   "event": {},
+ *   "example": {
+ *     "1": { "mapX": 500, "mapY": 100, "moved": false, "opacity": 1,
+ *            "attributes": { "health": 100, "attack": 10 } },
+ *     "2": { ... }
+ *   }
+ * }
+ * </pre>
  */
 public class SliceInjector {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    /** slice配置文件根目录 */
     private static final String SLICE_DIR = "assets/slice/";
-    /** 注册表文件路径 */
     private static final String REGISTRY_PATH = SLICE_DIR + "registry.json";
 
-    /** 已加载的SliceConfig缓存，key为JSON文件名（不含扩展名） */
-    private static final Map<String, SliceConfig> configCache = new LinkedHashMap<>();
-
-    /** SliceConfig外层字段名集合，用于区分外层字段和嵌套层 */
-    private static final Set<String> OUTER_FIELDS = Set.of(
-            "ID", "name"
-    );
+    /** 已加载的SliceConfig缓存，key为JSON文件名（不含扩展名），value为该文件的全部实例 */
+    private static final Map<String, List<SliceConfig>> configCache = new LinkedHashMap<>();
 
     /**
      * 加载所有注册的slice配置
-     * 读取registry.json中列出的所有JSON文件，解析为SliceConfig对象
-     * @return 加载的SliceConfig列表
-     * @throws Exception 文件读取或解析异常
+     * 每个JSON文件中的example层会被展开为多个SliceConfig
      */
     public static List<SliceConfig> loadAll() throws Exception {
         configCache.clear();
 
-        // 1. 读取registry.json
         String registryJson = new String(Files.readAllBytes(Paths.get(REGISTRY_PATH)));
         Map<String, Object> registryMap = objectMapper.readValue(registryJson, Map.class);
         List<String> sliceFiles = (List<String>) registryMap.get("slices");
 
-        // 2. 逐个加载slice配置文件
+        List<SliceConfig> allConfigs = new ArrayList<>();
         for (String fileName : sliceFiles) {
-            SliceConfig config = loadSliceConfig(SLICE_DIR + fileName);
-            // 以文件名（去掉.json后缀）作为key
+            List<SliceConfig> configs = loadSliceConfig(SLICE_DIR + fileName);
             String key = fileName.replace(".json", "");
-            configCache.put(key, config);
+            configCache.put(key, configs);
+            allConfigs.addAll(configs);
         }
-
-        return new ArrayList<>(configCache.values());
+        return allConfigs;
     }
 
     /**
-     * 加载单个slice配置文件
-     * 分层结构：
-     * - 外层字段（ID, name）通过反射注入SliceConfig字段
-     * - text层：嵌套对象，通过反射注入TextConfig字段
-     * - methods层：嵌套对象，存入methods Map
-     * - event层：嵌套对象，存入event Map
-     * - example层：实例专属配置，内嵌ID、moved、mapX、mapY、opacity、attributes
-     *
-     * Example JSON格式：
-     * <pre>
-     * { "ID": "test1", "name": "测试测试",
-     *   "text": {...}, "methods": {...}, "event": {},
-     *   "example": {
-     *     "ID": 1,
-     *     "mapX": -100, "mapY": -100,
-     *     "moved": false, "opacity": 1,
-     *     "attributes": { "health": 100, "attack": 10 }
-     *   }
-     * }
-     * </pre>
+     * 加载单个slice配置文件，返回该文件所有example实例
+     * 外层字段（ID, name, text, methods, event）作为共享模板，
+     * example中每个数字key展开为一个SliceConfig
      */
-    public static SliceConfig loadSliceConfig(String filePath) throws Exception {
+    public static List<SliceConfig> loadSliceConfig(String filePath) throws Exception {
         String json = new String(Files.readAllBytes(Paths.get(filePath)));
         Map<String, Object> configMap = objectMapper.readValue(json, Map.class);
 
-        SliceConfig config = new SliceConfig();
-
-        // 遍历所有JSON字段，分层处理
+        // 提取共享层
+        SliceConfig template = new SliceConfig();
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-
-            if (OUTER_FIELDS.contains(key)) {
-                // 外层字段：通过反射注入SliceConfig字段
-                injectField(config, key, value);
-            } else if ("text".equals(key)) {
-                // text层：解析嵌套对象，注入TextConfig
-                injectTextConfig(config, value);
-            } else if ("methods".equals(key)) {
-                // methods层：解析嵌套对象，存入methods Map
-                injectMethodMap(config.methods, value);
-            } else if ("event".equals(key)) {
-                // event层：解析嵌套对象，存入event Map
-                injectMap(config.event, value);
-            } else if ("example".equals(key)) {
-                // example层：解析实例专属配置
-                injectExampleConfig(config, value);
+            switch (key) {
+                case "ID" -> template.ID = value.toString();
+                case "name" -> template.name = value.toString();
+                case "text" -> injectTextConfig(template, value);
+                case "methods" -> injectMethodMap(template.methods, value);
+                case "event" -> injectMap(template.event, value);
+                // "example" 和未知字段忽略
             }
-            // 未知字段忽略
         }
 
-        return config;
+        // 展开 example 层
+        Object exampleObj = configMap.get("example");
+        if (!(exampleObj instanceof Map)) return Collections.emptyList();
+
+        Map<String, Object> exampleMap = (Map<String, Object>) exampleObj;
+        List<SliceConfig> results = new ArrayList<>();
+
+        for (Map.Entry<String, Object> entry : exampleMap.entrySet()) {
+            String exampleKey = entry.getKey();  // "1", "2" ...
+            Object exampleValue = entry.getValue();
+            if (!(exampleValue instanceof Map)) continue;
+
+            // 从模板克隆
+            SliceConfig cfg = cloneTemplate(template);
+            cfg.exampleID = exampleKey;
+
+            Map<String, Object> instMap = (Map<String, Object>) exampleValue;
+            for (Map.Entry<String, Object> instEntry : instMap.entrySet()) {
+                String instKey = instEntry.getKey();
+                Object instVal = instEntry.getValue();
+                if ("attributes".equals(instKey)) {
+                    injectMap(cfg.attributes, instVal);
+                } else {
+                    injectField(cfg, instKey, instVal);
+                }
+            }
+            results.add(cfg);
+        }
+        return results;
     }
 
-    /**
-     * 解析text嵌套对象，通过反射注入TextConfig字段
-     * @param config 目标SliceConfig对象
-     * @param value text层的JSON值（应为Map）
-     */
+    /** 从模板克隆出一个新的SliceConfig（浅拷贝字段） */
+    private static SliceConfig cloneTemplate(SliceConfig template) {
+        SliceConfig cfg = new SliceConfig();
+        cfg.ID = template.ID;
+        cfg.name = template.name;
+        cfg.moved = template.moved;
+        cfg.mapX = template.mapX;
+        cfg.mapY = template.mapY;
+        cfg.opacity = template.opacity;
+        // text 共享引用（只读）
+        cfg.text = template.text;
+        // methods/event 浅拷贝 Map
+        cfg.methods.putAll(template.methods);
+        cfg.event.putAll(template.event);
+        return cfg;
+    }
+
+    // ==================== 注入方法 ====================
+
     @SuppressWarnings("unchecked")
     private static void injectTextConfig(SliceConfig config, Object value) {
         if (!(value instanceof Map)) return;
@@ -126,12 +139,6 @@ public class SliceInjector {
         }
     }
 
-    /**
-     * 通过反射将值注入TextConfig的指定字段
-     * @param textConfig 目标TextConfig对象
-     * @param fieldName 字段名
-     * @param value 字段值
-     */
     private static void injectTextField(SliceConfig.TextConfig textConfig, String fieldName, Object value) {
         try {
             java.lang.reflect.Field field = SliceConfig.TextConfig.class.getDeclaredField(fieldName);
@@ -144,23 +151,12 @@ public class SliceInjector {
         }
     }
 
-    /**
-     * 解析嵌套对象，存入Map<String, Object>
-     * @param map 目标Map
-     * @param value 嵌套层的JSON值（应为Map）
-     */
     @SuppressWarnings("unchecked")
     private static void injectMap(Map<String, Object> map, Object value) {
         if (!(value instanceof Map)) return;
-        Map<String, Object> sourceMap = (Map<String, Object>) value;
-        map.putAll(sourceMap);
+        map.putAll((Map<String, Object>) value);
     }
 
-    /**
-     * 解析methods嵌套对象，存入Map<String, String>
-     * @param map 目标Map
-     * @param value methods层的JSON值（应为Map）
-     */
     @SuppressWarnings("unchecked")
     private static void injectMethodMap(Map<String, String> map, Object value) {
         if (!(value instanceof Map)) return;
@@ -170,38 +166,6 @@ public class SliceInjector {
         }
     }
 
-    /**
-     * 解析example嵌套对象，注入实例专属配置
-     * example层包含：ID（实例小ID）、moved、mapX、mapY、opacity、attributes
-     * @param config 目标SliceConfig对象
-     * @param value example层的JSON值（应为Map）
-     */
-    @SuppressWarnings("unchecked")
-    private static void injectExampleConfig(SliceConfig config, Object value) {
-        if (!(value instanceof Map)) return;
-        Map<String, Object> exampleMap = (Map<String, Object>) value;
-        for (Map.Entry<String, Object> entry : exampleMap.entrySet()) {
-            String key = entry.getKey();
-            Object val = entry.getValue();
-            if ("attributes".equals(key)) {
-                // attributes：合并到config.attributes Map
-                injectMap(config.attributes, val);
-            } else if ("ID".equals(key)) {
-                // 实例小ID
-                config.exampleID = ((Number) val).intValue();
-            } else {
-                // moved、mapX、mapY、opacity：通过反射注入SliceConfig字段
-                injectField(config, key, val);
-            }
-        }
-    }
-
-    /**
-     * 通过反射将值注入SliceConfig的指定字段
-     * @param config 目标SliceConfig对象
-     * @param fieldName 字段名
-     * @param value 字段值
-     */
     private static void injectField(SliceConfig config, String fieldName, Object value) {
         try {
             java.lang.reflect.Field field = SliceConfig.class.getDeclaredField(fieldName);
@@ -214,12 +178,6 @@ public class SliceInjector {
         }
     }
 
-    /**
-     * 通用字段赋值方法，根据字段类型自动转换
-     * @param field 反射字段
-     * @param obj 目标对象
-     * @param value 字段值
-     */
     private static void setFieldValue(java.lang.reflect.Field field, Object obj, Object value) throws IllegalAccessException {
         if (field.getType() == int.class) {
             field.setInt(obj, ((Number) value).intValue());
@@ -234,47 +192,34 @@ public class SliceInjector {
         }
     }
 
+    // ==================== 查询 ====================
+
     /**
-     * 根据名称获取已加载的SliceConfig
-     * @param name slice名称（JSON文件名，不含扩展名）
-     * @return 对应的SliceConfig，不存在则返回null
+     * 根据文件名（不含扩展名）获取该大类下的第一个实例
      */
     public static SliceConfig get(String name) {
-        return configCache.get(name);
+        List<SliceConfig> list = configCache.get(name);
+        return (list != null && !list.isEmpty()) ? list.get(0) : null;
     }
 
     /**
      * 获取所有已加载的SliceConfig
-     * @return SliceConfig列表
      */
     public static List<SliceConfig> getAll() {
-        return new ArrayList<>(configCache.values());
+        List<SliceConfig> all = new ArrayList<>();
+        for (List<SliceConfig> list : configCache.values()) {
+            all.addAll(list);
+        }
+        return all;
     }
 
     /**
-     * 根据SliceConfig创建对应的Slice实例
-     * moved=true则创建MoveSlice子类实例，moved=false则创建StaticSlice子类实例
-     * @param config slice配置
-     * @return 是否为可移动Slice
-     */
-    public static boolean isMovable(SliceConfig config) {
-        return config.moved;
-    }
-
-    /**
-     * 重新加载所有slice配置（热更新用）
-     * @return 重新加载后的SliceConfig列表
-     * @throws Exception 文件读取或解析异常
+     * 重新加载所有slice配置
      */
     public static List<SliceConfig> reload() throws Exception {
         return loadAll();
     }
 
-    /**
-     * 获取注册表中所有slice文件名列表
-     * @return 文件名列表
-     * @throws Exception 文件读取或解析异常
-     */
     public static List<String> getRegistryList() throws Exception {
         String registryJson = new String(Files.readAllBytes(Paths.get(REGISTRY_PATH)));
         Map<String, Object> registryMap = objectMapper.readValue(registryJson, Map.class);

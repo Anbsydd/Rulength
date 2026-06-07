@@ -22,15 +22,15 @@
   },
   "event": {},
   "example": {
-    "ID": 1,
-    "mapX": -100,
-    "mapY": -100,
-    "moved": false,
-    "opacity": 1,
-    
-    "attributes": {
-      "health": 100,
-      "attack": 10
+    "1": {
+      "mapX": -100,
+      "mapY": -100,
+      "moved": false,
+      "opacity": 1,
+      "attributes": {
+        "health": 100,
+        "attack": 10
+      }
     }
   }
 }

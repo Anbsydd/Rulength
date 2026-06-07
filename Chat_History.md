@@ -266,18 +266,16 @@
   - assets/textLan/Simplified Chinese.json
   - src/main/java/module-info.java
 
-## 对话 26: Slice配置重构——新增ID和example层
+## 对话 27: Slice配置再重构——example改为数字ID映射多实例
 - 时间: 2026-06-07
-- 要求: 每个大类（一种slice）有一个外层ID，每个实例有example层中的小ID；moved/mapX/mapY/opacity/attributes从外层移到example层
+- 要求: example内以数字字符串"1","2"为key，每个key内是该实例的完整状态属性（mapX/mapY/moved/opacity/attributes），每个大类JSON可展开为多个实例
 - 实现:
-  - SliceConfig.java — 新增 ID（大类ID）和 exampleID（实例小ID）字段；外层保留ID、name、text、methods、event；example层注入moved、mapX、mapY、opacity、attributes、ID（映射到exampleID）
-  - SliceInjector.java — OUTER_FIELDS改为只含ID、name；新增injectExampleConfig()处理example层；不再处理顶层attributes（移至example内）
-  - Player.json / Test.json / t2.json — 按新结构迁移：外层加ID字段，moved/mapX/mapY/opacity/attributes移入example层
-  - Game.java — 日志输出增加 ID/exampleID 信息
+  - SliceInjector.java — 完全重写：loadSliceConfig返回List<SliceConfig>；example层每个数字key展开为一个独立SliceConfig；引入cloneTemplate()从大类模板克隆，然后注入实例专属字段；exampleID改为String类型（存储数字key）
+  - SliceConfig.java — exampleID字段类型从int改为String
+  - Player.json / Test.json / t2.json — example改为数字ID映射结构
 - 修改文件:
   - src/main/java/config/SliceConfig.java
   - src/main/java/config/SliceInjector.java
   - assets/slice/Player.json
-  - assets/slice/Test.json（用户手动）
-  - assets/slice/t2.json
-  - src/main/java/game/Game.java
+  - assets/slice/Test.json
+  - assets/slice/t2.json（用户手动）

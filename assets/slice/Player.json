@@ -19,14 +19,15 @@
   },
   "event": {},
   "example": {
-    "ID": 1,
-    "mapX": 100,
-    "mapY": 100,
-    "moved": true,
-    "opacity": 1,
-    "attributes": {
-      "health": 100,
-      "attack": 10
+    "1": {
+      "mapX": 100,
+      "mapY": 100,
+      "moved": true,
+      "opacity": 1,
+      "attributes": {
+        "health": 100,
+        "attack": 10
+      }
     }
   }
 }
