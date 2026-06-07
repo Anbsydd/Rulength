@@ -4,7 +4,7 @@ import event.MapTransformEvent;
 import event.StageSizeChange;
 import javafx.scene.input.MouseEvent;
 
-import static game.Game.bus;
+import static core.CoreAPI.bus;
 import static game.window.Camera.zoom;
 
 public abstract class StaticSlice extends Slice {
@@ -48,21 +48,21 @@ public abstract class StaticSlice extends Slice {
 
     @Override
     public double finalTraToMapX(double traX) {
-        return traX / game.Game.multiX;
+        return traX / core.CoreAPI.multiX;
     }
 
     @Override
     public double finalTraToMapY(double traY) {
-        return traY / game.Game.multiY;
+        return traY / core.CoreAPI.multiY;
     }
 
     @Override
     public double finalMapToTraX(double mapX) {
-        return mapX * game.Game.multiX;
+        return mapX * core.CoreAPI.multiX;
     }
 
     @Override
     public double finalMapToTraY(double mapY) {
-        return mapY * game.Game.multiY;
+        return mapY * core.CoreAPI.multiY;
     }
 }

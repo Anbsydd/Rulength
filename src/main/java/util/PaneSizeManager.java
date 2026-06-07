@@ -4,7 +4,7 @@ package util;
 import event.StageSizeChange;
 import javafx.scene.layout.Region;
 
-import static game.Game.bus;
+import static core.CoreAPI.bus;
 
 public class PaneSizeManager {
     public static void add(Region region, double widthMultiply, double heightMultiply) {

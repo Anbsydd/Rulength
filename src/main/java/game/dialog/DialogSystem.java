@@ -20,7 +20,7 @@ import util.TextLan;
 import java.io.File;
 import java.util.List;
 
-import static game.Game.bus;
+import static core.CoreAPI.bus;
 
 /**
  * 对话系统

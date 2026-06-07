@@ -7,6 +7,7 @@ module Rulength {
     requires com.fasterxml.jackson.databind;
     requires java.desktop;
 
+    exports core;
     exports event;
     exports event.input;
     exports game;

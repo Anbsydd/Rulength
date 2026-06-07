@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import util.ImageManager;
 
-import static game.Game.bus;
+import static core.CoreAPI.bus;
 
 /**
  * 小地图组件

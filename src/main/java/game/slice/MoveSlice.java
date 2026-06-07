@@ -5,7 +5,7 @@ import event.StageSizeChange;
 import game.window.Camera;
 import javafx.scene.input.MouseEvent;
 
-import static game.Game.bus;
+import static core.CoreAPI.bus;
 import static game.window.Camera.zoom;
 
 public abstract class MoveSlice extends Slice {
@@ -43,21 +43,21 @@ public abstract class MoveSlice extends Slice {
     }
     @Override
     public double finalTraToMapX(double traX) {
-        return (traX - Camera.offsetX) / zoom / game.Game.multiX;
+        return (traX - Camera.offsetX) / zoom / core.CoreAPI.multiX;
     }
 
     @Override
     public double finalTraToMapY(double traY) {
-        return (traY - Camera.offsetY) / zoom / game.Game.multiY;
+        return (traY - Camera.offsetY) / zoom / core.CoreAPI.multiY;
     }
 
     @Override
     public double finalMapToTraX(double mapX) {
-        return mapX * zoom * game.Game.multiX + Camera.offsetX;
+        return mapX * zoom * core.CoreAPI.multiX + Camera.offsetX;
     }
 
     @Override
     public double finalMapToTraY(double mapY) {
-        return mapY * zoom * game.Game.multiY + Camera.offsetY;
+        return mapY * zoom * core.CoreAPI.multiY + Camera.offsetY;
     }
 }

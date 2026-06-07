@@ -11,7 +11,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
 import util.PaneSizeManager;
 
-import static game.Game.bus;
+import static core.CoreAPI.bus;
 
 /**
  * Camera 视窗层

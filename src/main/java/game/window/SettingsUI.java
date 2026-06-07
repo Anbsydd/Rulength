@@ -338,7 +338,7 @@ public class SettingsUI extends StackPane {
      * 设置ESC键处理
      */
     private void setupEscHandler() {
-        Game.stage_ref.getJavafxStage().getScene().addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+        core.CoreAPI.stageRef.getJavafxStage().getScene().addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.ESCAPE) {
                 toggleVisibility();
                 e.consume();
@@ -410,7 +410,7 @@ public class SettingsUI extends StackPane {
      * 将配置应用到游戏组件
      */
     private void applyToGame(String fileName, Object config) {
-        Game game = Game.stage_ref.getGame();
+        Game game = core.CoreAPI.stageRef.getGame();
         if (game == null) return;
 
         switch (fileName) {

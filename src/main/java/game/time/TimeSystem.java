@@ -4,7 +4,7 @@ import config.TimeConfig;
 import event.TickEvent;
 import javafx.animation.AnimationTimer;
 
-import static game.Game.bus;
+import static core.CoreAPI.bus;
 
 /**
  * 游戏刻时钟系统

@@ -1,6 +1,7 @@
 package game;
 
 import config.*;
+import core.CoreAPI;
 import event.EventBus;
 import event.MapTransformEvent;
 import event.StageSizeChange;
@@ -22,7 +23,6 @@ import util.PaneSizeManager;
 import java.util.concurrent.*;
 
 public class Game {
-    public static EventBus bus;
     private final Stage stage;
     StackPane root;
     StackPane startMenu;
@@ -35,7 +35,6 @@ public class Game {
 
     /** 当前活跃碰撞对集合（pair key），用于进出碰撞检测 */
     private static final java.util.Set<Long> activeCollisions = java.util.concurrent.ConcurrentHashMap.newKeySet();
-    public static ExecutorService mainPool;
     // 配置文件路径
     private static final String GAME_CONFIG_PATH = "assets/config/gameConfig.json";
     private static final String CAMERA_CONFIG_PATH = "assets/config/cameraConfig.json";
@@ -44,25 +43,27 @@ public class Game {
     // 游戏配置
     private GameConfig gameConfig;
     private SettingsUI settingsUI;
-    public static game.window.Stage stage_ref;
-    public final double ORIGIN_SCENE_WIDTH;
-    public final double ORIGIN_SCENE_HEIGHT;
-    public static double multiX = 1.0;
-    public static double multiY = 1.0;
     private game.time.TimeSystem timeSystem;
     private DialogSystem dialogSystem;
 
     public Game(Stage stage) throws Exception {
-        bus = new EventBus();
-        // 加载语言配置
+        // 1. 初始化事件总线
+        EventBus eventBus = new EventBus();
+        // 2. 加载语言配置
         util.TextLan.load("Simplified Chinese.json");
-        // 加载游戏配置
+        // 3. 加载游戏配置（获取线程池参数）
         gameConfig = ConfigLoader.loadConfig(GAME_CONFIG_PATH, GameConfig.class);
-        mainPool = new ThreadPoolExecutor(gameConfig.corePoolSize, gameConfig.maxPoolSize, gameConfig.keepAliveSeconds, TimeUnit.SECONDS, new LinkedBlockingQueue<>(gameConfig.queueCapacity), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
+        ExecutorService pool = new ThreadPoolExecutor(
+                gameConfig.corePoolSize, gameConfig.maxPoolSize,
+                gameConfig.keepAliveSeconds, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(gameConfig.queueCapacity),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.AbortPolicy());
+        // 4. 初始化 CoreAPI（基础设施门面）
         this.stage = stage;
         initRoot();
-        ORIGIN_SCENE_WIDTH=root.getWidth();
-        ORIGIN_SCENE_HEIGHT=root.getHeight();
+        new CoreAPI(eventBus, pool, root.getWidth(), root.getHeight());
+        // 5. 后续初始化
 //        initStartMenu();
 //        root.getChildren().add(startMenu);
         initMap();
@@ -172,14 +173,14 @@ public class Game {
         root.heightProperty().addListener((obs, oldVal, newVal) -> miniMap.reposition());
     }
     private void sendRootSizeChangedEvent(double width, double height, double oldWidth, double oldHeight) {
-        multiX = width/ORIGIN_SCENE_WIDTH;
-        multiY = height/ORIGIN_SCENE_HEIGHT;
-        double oldMultiX= oldWidth/ORIGIN_SCENE_WIDTH;
-        double oldMultiY= oldHeight/ORIGIN_SCENE_HEIGHT;
-        bus.publish(new StageSizeChange(width, height,multiX,multiY,oldWidth,oldHeight,oldMultiX,oldMultiY));
+        CoreAPI.multiX = width / CoreAPI.getInstance().originSceneWidth;
+        CoreAPI.multiY = height / CoreAPI.getInstance().originSceneHeight;
+        double oldMultiX= oldWidth / CoreAPI.getInstance().originSceneWidth;
+        double oldMultiY= oldHeight / CoreAPI.getInstance().originSceneHeight;
+        CoreAPI.bus.publish(new StageSizeChange(width, height, CoreAPI.multiX, CoreAPI.multiY, oldWidth, oldHeight, oldMultiX, oldMultiY));
     }
     void moveWithMap(Node node){
-        bus.subscribe(MapTransformEvent.class, (MapTransformEvent event) -> {
+        CoreAPI.bus.subscribe(MapTransformEvent.class, (MapTransformEvent event) -> {
             node.setTranslateX(event.offsetX());
             node.setTranslateY(event.offsetY());
             node.setScaleX(event.zoom());
@@ -191,7 +192,7 @@ public class Game {
     }
 
     private void initSettings() {
-        stage_ref = stage;
+        CoreAPI.stageRef = stage;
         settingsUI = new SettingsUI();
         PaneSizeManager.add(settingsUI, 1);
         PaneSizeManager.set(settingsUI, root.getWidth(), root.getHeight());

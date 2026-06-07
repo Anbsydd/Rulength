@@ -68,14 +68,14 @@ public class EventBus {
                 Consumer<T> handler = (Consumer<T>) c;
                 if (handler instanceof SafeListener<T> sl) {
                     if (!sl.active) continue;
-                    if (async) game.Game.mainPool.submit(() -> sl.listener.accept(event));
+                    if (async) core.CoreAPI.mainPool.submit(() -> sl.listener.accept(event));
                     else try {
                         sl.listener.accept(event);
                     } catch (Throwable ex) {
                         ex.printStackTrace();
                     }
                 } else {
-                    if (async) game.Game.mainPool.submit(() -> handler.accept(event));
+                    if (async) core.CoreAPI.mainPool.submit(() -> handler.accept(event));
                     else handler.accept(event);
                 }
             }

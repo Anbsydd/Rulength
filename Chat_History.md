@@ -279,3 +279,20 @@
   - src/main/java/config/SliceInjector.java
   - assets/slice/t2.json
   - src/main/java/game/Game.java
+
+## 对话 29: 创建 CoreAPI 基础设施门面
+- 时间: 2026-06-08
+- 要求: 创建CoreAPI类封装全局基础设施，将模块化第一步——core模块从game.Game中独立
+- 实现: 
+  - 新建 src/main/java/core/CoreAPI.java — 基础设施门面，承载 bus/mainPool/multiX/multiY/stageRef/originSceneWidth/Height
+  - Game.java — 移除bus、mainPool、multiX、multiY、ORIGIN_SCENE_WIDTH/HEIGHT、stage_ref静态字段，在构造函数中初始化CoreAPI
+  - 10个文件的 import static game.Game.bus → import static core.CoreAPI.bus
+  - EventBus.java — game.Game.mainPool → core.CoreAPI.mainPool
+  - MoveSlice.java / StaticSlice.java — game.Game.multiX/Y → core.CoreAPI.multiX/Y
+  - SettingsUI.java — Game.stage_ref → core.CoreAPI.stageRef
+  - module-info.java — 新增 exports core
+- 设计要点:
+  - 字段采用public static与Game当前模式一致，迁移只替换类名不改访问语法
+  - CoreAPI为单例模式，重复创建抛出IllegalStateException
+  - 碰撞检测系统（allSlices/checkCollisions/clampToBoundary）留在Game中——属于游戏逻辑而非基础设施
+- 编译验证: mvn clean compile BUILD SUCCESS

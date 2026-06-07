@@ -3,7 +3,7 @@ package game.slice;
 import config.SliceConfig;
 import event.StageSizeChange;
 
-import static game.Game.bus;
+import static core.CoreAPI.bus;
 
 /**
  * 基于SliceConfig配置创建的静态Slice

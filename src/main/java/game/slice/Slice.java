@@ -21,7 +21,7 @@ import javafx.scene.input.ScrollEvent;
 
 import java.awt.*;
 
-import static game.Game.bus;
+import static core.CoreAPI.bus;
 
 public abstract class Slice extends Button implements LifeCycled, TextSized, Coordinatable {
     protected boolean loaded = false;
