@@ -20,5 +20,8 @@
   "SliceEditor_Generate": "✨ 生成",
   "SliceEditor_CurrentSlices": "当前 Slice 列表",
   "SliceEditor_Remove": "❌ 删除",
-  "SliceEditor_Close": "关闭"
+  "SliceEditor_Close": "关闭",
+  "SliceEditor_NoDefSelected": "请先选择一个定义",
+  "SliceEditor_Generated": "已生成：",
+  "SliceEditor_InvalidCoord": "坐标格式错误"
 }

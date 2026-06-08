@@ -17,6 +17,7 @@ module Rulength {
     exports util;
 
     exports game.dialog;
+    exports game.ui;
     opens game.dialog to com.fasterxml.jackson.databind;
 
     opens game to javafx.graphics;

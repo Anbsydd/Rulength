@@ -2,6 +2,8 @@ package game.window;
 
 import config.*;
 import core.GameAPI;
+import game.ui.GameButton;
+import game.ui.UITheme;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -9,12 +11,8 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import util.ImageManager;
 import util.TextLan;
 
@@ -24,12 +22,21 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * 全屏设置界面
- * 
+ * 全屏设置界面 — 深色工业规则风
+ * <p>
  * 按ESC键打开/关闭，以blank.png为背景，
  * 所有config文件中的配置都可以在此更改。
  * 修改时立即生效，保存按钮写入JSON文件，
  * 取消按钮重新从JSON文件加载，还原按钮从defaultConfig恢复。
+ * <p>
+ * 面板层次（依据 UI设计.md）：
+ *   外框（铜色边框）
+ *   ↓
+ *   内阴影
+ *   ↓
+ *   深色主体（rgba(10,15,20,0.92)）
+ *   ↓
+ *   微发光边缘（电力黄光晕）
  */
 public class SettingsUI extends StackPane {
 
@@ -136,10 +143,10 @@ public class SettingsUI extends StackPane {
     }
 
     /**
-     * 构建UI
+     * 构建UI — 蒸汽朋克工业风格
      */
     private void buildUI() {
-        // 背景
+        // 背景（blank.png 作为最底层）
         ImageView bgView = new ImageView(ImageManager.load("uiImages/backgrounds/blank.png"));
         bgView.setPreserveRatio(false);
         bgView.setSmooth(true);
@@ -147,32 +154,54 @@ public class SettingsUI extends StackPane {
         bgView.fitHeightProperty().bind(heightProperty());
         getChildren().add(bgView);
 
-        // 半透明遮罩
+        // 深色遮罩（带铜色边框感）
         overlay = new StackPane();
-        overlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.6);");
+        overlay.setStyle("-fx-background-color: rgba(6, 9, 13, 0.85);"
+                + "-fx-border-color: #0B0F14;"
+                + "-fx-border-width: 3;");
         overlay.prefWidthProperty().bind(widthProperty());
         overlay.prefHeightProperty().bind(heightProperty());
         getChildren().add(overlay);
 
-        // 整体透明度（背景+界面）
+        // 整体透明度
         setOpacity(settingsConfig.opacity);
 
-        // 主面板
+        // ===== 主面板 =====
         VBox mainPanel = new VBox(15);
         mainPanel.setAlignment(Pos.CENTER);
-        mainPanel.setMaxWidth(700);
+        mainPanel.setMaxWidth(760);
         mainPanel.setMaxHeight(Double.MAX_VALUE);
+        mainPanel.setStyle(UITheme.panelCornerStyle());
 
+        // ---- 标题栏 ----
+        HBox titleBar = new HBox(10);
+        titleBar.setAlignment(Pos.CENTER_LEFT);
+        titleBar.setPadding(new Insets(8, 16, 8, 16));
+        // 左侧装饰线
+        Label titleDecor = new Label("▌");
+        titleDecor.setFont(UITheme.fontBold(24));
+        titleDecor.setTextFill(Color.web(UITheme.COPPER_MID));
         // 标题
         Label titleLabel = new Label(TextLan.get("SettingsUI_Title"));
-        titleLabel.setFont(Font.font("Microsoft YaHei", FontWeight.BOLD, 28));
-        titleLabel.setTextFill(Color.WHITE);
+        titleLabel.setFont(UITheme.fontBold(24));
+        titleLabel.setTextFill(UITheme.TEXT_TITLE);
+        // 右侧发光点
+        Label titleGlow = new Label("◆");
+        titleGlow.setFont(UITheme.fontBold(10));
+        titleGlow.setTextFill(Color.web(UITheme.GLOW_POWER));
+        HBox titleSpacer = new HBox();
+        HBox.setHgrow(titleSpacer, Priority.ALWAYS);
+        titleBar.getChildren().addAll(titleDecor, titleLabel, titleSpacer, titleGlow);
+        // 标题下发光分割线
+        Region titleLine = new Region();
+        titleLine.setPrefHeight(1.5);
+        titleLine.setStyle("-fx-background-color: linear-gradient(to right, "
+                + UITheme.GLOW_POWER + ", transparent);");
 
-        // 配置内容区域（可滚动）
-        configContainer = new VBox(20);
-        configContainer.setPadding(new Insets(10));
+        // ---- 配置内容区域（可滚动） ----
+        configContainer = new VBox(16);
+        configContainer.setPadding(new Insets(8, 12, 8, 12));
 
-        // 为每个配置文件创建一个分组
         for (String fileName : CONFIG_FILES) {
             VBox section = createConfigSection(fileName);
             configContainer.getChildren().add(section);
@@ -181,14 +210,14 @@ public class SettingsUI extends StackPane {
         scrollPane = new ScrollPane(configContainer);
         scrollPane.setFitToWidth(true);
         scrollPane.setMaxHeight(Double.MAX_VALUE);
-        scrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+        scrollPane.setStyle(UITheme.scrollPaneStyle());
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
-        // 按钮区域
+        // ---- 按钮栏 ----
         HBox buttonBar = createButtonBar();
 
-        mainPanel.getChildren().addAll(titleLabel, scrollPane, buttonBar);
+        mainPanel.getChildren().addAll(titleBar, titleLine, scrollPane, buttonBar);
         overlay.getChildren().add(mainPanel);
 
         // 初始不可见
@@ -197,18 +226,23 @@ public class SettingsUI extends StackPane {
     }
 
     /**
-     * 创建一个配置文件的分组
+     * 创建一个配置文件的分组 — 铜色金属面板
      */
     private VBox createConfigSection(String fileName) {
         VBox section = new VBox(8);
-        section.setStyle("-fx-background-color: rgba(255, 255, 255, 0.08); -fx-background-radius: 8; -fx-padding: 15;");
+        section.setStyle(UITheme.panelStyle());
 
         // 分组标题
         Label sectionTitle = new Label(getDisplayName(fileName));
-        sectionTitle.setFont(Font.font("Microsoft YaHei", FontWeight.BOLD, 18));
-        sectionTitle.setTextFill(Color.LIGHTCYAN);
+        sectionTitle.setFont(UITheme.fontBold(16));
+        sectionTitle.setTextFill(UITheme.TEXT_PRIMARY);
 
-        section.getChildren().add(sectionTitle);
+        // 标题下细线
+        Region sectionLine = new Region();
+        sectionLine.setPrefHeight(1);
+        sectionLine.setStyle("-fx-background-color: " + UITheme.COPPER_DARK + ";");
+
+        section.getChildren().addAll(sectionTitle, sectionLine);
 
         // 字段编辑器
         Map<String, Object> fieldMap = new LinkedHashMap<>();
@@ -236,7 +270,7 @@ public class SettingsUI extends StackPane {
     }
 
     /**
-     * 创建字段编辑器
+     * 创建字段编辑器 — 工业风格输入控件
      */
     private Node createFieldEditor(String fileName, String fieldName, Object value, String description, Class<?> type) {
         HBox row = new HBox(10);
@@ -244,24 +278,24 @@ public class SettingsUI extends StackPane {
 
         // 字段名标签
         Label nameLabel = new Label(fieldName);
-        nameLabel.setFont(Font.font("Microsoft YaHei", 13));
-        nameLabel.setTextFill(Color.WHITE);
-        nameLabel.setMinWidth(160);
-        nameLabel.setMaxWidth(160);
+        nameLabel.setFont(UITheme.font(13));
+        nameLabel.setTextFill(UITheme.TEXT_LIGHT);
+        nameLabel.setMinWidth(140);
+        nameLabel.setMaxWidth(140);
 
         // 说明标签
         Label descLabel = new Label(description);
-        descLabel.setFont(Font.font("Microsoft YaHei", 11));
-        descLabel.setTextFill(Color.GRAY);
+        descLabel.setFont(UITheme.font(11));
+        descLabel.setTextFill(UITheme.TEXT_DIM);
         descLabel.setWrapText(true);
-        descLabel.setMaxWidth(200);
+        descLabel.setMaxWidth(260);
 
-        // 输入控件
         Control input;
         if (type == int.class) {
             Spinner<Integer> spinner = new Spinner<>(Integer.MIN_VALUE, Integer.MAX_VALUE, (Integer) value);
             spinner.setEditable(true);
-            spinner.setPrefWidth(120);
+            spinner.setPrefWidth(110);
+            spinner.getEditor().setStyle(UITheme.fieldStyle());
             spinner.valueProperty().addListener((obs, oldVal, newVal) -> {
                 editValues.get(fileName).put(fieldName, newVal);
                 applyConfig(fileName);
@@ -269,29 +303,29 @@ public class SettingsUI extends StackPane {
             input = spinner;
         } else if (type == double.class) {
             TextField textField = new TextField(String.valueOf(value));
-            textField.setPrefWidth(120);
+            textField.setPrefWidth(110);
+            textField.setStyle(UITheme.fieldStyle());
             textField.textProperty().addListener((obs, oldVal, newVal) -> {
                 try {
                     double d = Double.parseDouble(newVal);
                     editValues.get(fileName).put(fieldName, d);
                     applyConfig(fileName);
-                } catch (NumberFormatException ignored) {
-                }
+                } catch (NumberFormatException ignored) {}
             });
             input = textField;
         } else if (type == boolean.class) {
             CheckBox checkBox = new CheckBox();
             checkBox.setSelected((Boolean) value);
-            checkBox.setTextFill(Color.WHITE);
+            checkBox.setTextFill(UITheme.TEXT_LIGHT);
             checkBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
                 editValues.get(fileName).put(fieldName, newVal);
                 applyConfig(fileName);
             });
             input = checkBox;
         } else {
-            // String
             TextField textField = new TextField(value != null ? value.toString() : "");
-            textField.setPrefWidth(200);
+            textField.setPrefWidth(180);
+            textField.setStyle(UITheme.fieldStyle());
             textField.textProperty().addListener((obs, oldVal, newVal) -> {
                 editValues.get(fileName).put(fieldName, newVal);
                 applyConfig(fileName);
@@ -304,39 +338,41 @@ public class SettingsUI extends StackPane {
     }
 
     /**
-     * 创建按钮栏
+     * 创建按钮栏 — 工业控制台风格
      */
     private HBox createButtonBar() {
-        HBox bar = new HBox(20);
+        HBox bar = new HBox(14);
         bar.setAlignment(Pos.CENTER);
-        bar.setPadding(new Insets(10, 0, 10, 0));
+        bar.setPadding(new Insets(8, 16, 12, 16));
 
-        Button saveBtn = createStyledButton(TextLan.get("SettingsUI_Save"), "#4CAF50");
+        // 分割装饰
+        Region barLine = new Region();
+        barLine.setPrefHeight(1);
+        barLine.setStyle("-fx-background-color: linear-gradient(to right, transparent, "
+                + UITheme.COPPER_MID + ", transparent);");
+        barLine.setMaxWidth(Double.MAX_VALUE);
+
+        GameButton saveBtn = GameButton.success(TextLan.get("SettingsUI_Save"));
         saveBtn.setOnAction(e -> saveConfigs());
 
-        Button cancelBtn = createStyledButton(TextLan.get("SettingsUI_Cancel"), "#f44336");
+        GameButton cancelBtn = GameButton.danger(TextLan.get("SettingsUI_Cancel"));
         cancelBtn.setOnAction(e -> cancelConfigs());
 
-        Button resetBtn = createStyledButton(TextLan.get("SettingsUI_ResetDefault"), "#FF9800");
+        GameButton resetBtn = GameButton.secondary(TextLan.get("SettingsUI_ResetDefault"));
         resetBtn.setOnAction(e -> resetToDefaults());
 
-        Button editBtn = createStyledButton(TextLan.get("SettingsUI_Edit"), "#2196F3");
+        GameButton editBtn = GameButton.tech(TextLan.get("SettingsUI_Edit"));
         editBtn.setOnAction(e -> sliceEditor.show());
 
-        bar.getChildren().addAll(saveBtn, cancelBtn, resetBtn, editBtn);
-        return bar;
-    }
+        // 右端科技装饰
+        Label barGlow = new Label("◥");
+        barGlow.setFont(UITheme.fontTech(12));
+        barGlow.setTextFill(Color.web(UITheme.GLOW_TECH));
+        HBox spacer = new HBox();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-    /**
-     * 创建样式化按钮
-     */
-    private Button createStyledButton(String text, String bgColor) {
-        Button btn = new Button(text);
-        btn.setFont(Font.font("Microsoft YaHei", FontWeight.BOLD, 14));
-        btn.setStyle("-fx-background-color: " + bgColor + "; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 20; -fx-cursor: hand;");
-        btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: derive(" + bgColor + ", 20%); -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 20; -fx-cursor: hand;"));
-        btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: " + bgColor + "; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 20; -fx-cursor: hand;"));
-        return btn;
+        bar.getChildren().addAll(barGlow, spacer, saveBtn, cancelBtn, resetBtn, editBtn);
+        return bar;
     }
 
     /**
@@ -357,7 +393,6 @@ public class SettingsUI extends StackPane {
     public void toggleVisibility() {
         settingsVisible = !settingsVisible;
         if (settingsVisible) {
-            // 打开设置前，重新加载当前配置到编辑器
             refreshEditors();
         }
         setVisible(settingsVisible);
@@ -404,7 +439,6 @@ public class SettingsUI extends StackPane {
                 }
             }
 
-            // 应用到游戏组件
             applyToGame(fileName, config);
         } catch (Exception e) {
             e.printStackTrace();
@@ -418,7 +452,7 @@ public class SettingsUI extends StackPane {
         switch (fileName) {
             case "cameraConfig.json" -> GameAPI.applyCameraConfig((CameraConfig) config);
             case "miniMapConfig.json" -> GameAPI.applyMiniMapConfig((MiniMapConfig) config);
-            case "gameConfig.json" -> {} // 线程池参数运行时不可更改，保存后下次启动生效
+            case "gameConfig.json" -> {}
             case "stageConfig.json" -> GameAPI.applyStageConfig((StageConfig) config);
             case "settingsConfig.json" -> applySettingsConfig((SettingsConfig) config);
         }
@@ -453,7 +487,6 @@ public class SettingsUI extends StackPane {
                 ConfigWriter.writeConfig(CONFIG_DIR + fileName, config);
             }
             dirty = false;
-            // 保存后更新savedConfigs
             loadSavedConfigs();
             closeSettings();
         } catch (Exception e) {
@@ -466,7 +499,6 @@ public class SettingsUI extends StackPane {
      */
     private void cancelConfigs() {
         try {
-            // 重新从JSON文件加载配置并应用到游戏
             for (String fileName : CONFIG_FILES) {
                 Class<?> clazz = CONFIG_CLASSES.get(fileName);
                 Object config = ConfigLoader.loadConfig(CONFIG_DIR + fileName, clazz);
@@ -484,17 +516,14 @@ public class SettingsUI extends StackPane {
      */
     private void resetToDefaults() {
         try {
-            // 复制所有默认配置到config目录
             ConfigWriter.copyAllDefaultsToConfig();
 
-            // 重新加载并应用
             loadSavedConfigs();
             for (String fileName : CONFIG_FILES) {
                 Object config = savedConfigs.get(fileName);
                 applyToGame(fileName, config);
             }
 
-            // 刷新编辑器显示
             editValues.clear();
             configContainer.getChildren().clear();
             for (String fileName : CONFIG_FILES) {
@@ -539,4 +568,3 @@ public class SettingsUI extends StackPane {
         };
     }
 }
-
