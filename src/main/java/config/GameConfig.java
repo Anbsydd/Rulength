@@ -20,8 +20,6 @@ public class GameConfig {
     public int maxFrameRate = 60;
     /** 是否开启垂直同步（默认true，关闭可能画面撕裂但帧率更高） */
     public boolean vSync = true;
-    /** 相对鼠标灵敏度，1.0=正常，>1.0加速，<1.0减速 */
-    public double mouseSensitivity = 1.0;
 
     public GameConfig() {
     }

@@ -92,10 +92,6 @@ public class Camera extends StackPane {
                 @Override
                 public void handle(long now) {
                     lerpAndPublish();
-                    // 每帧末尾：如果处于相对鼠标模式，将OS光标归位到窗口中心
-                    if (RelativeMouse.isActive()) {
-                        RelativeMouse.warpBack();
-                    }
                     // FPS 统计：每秒打印一次
                     frameCount++;
                     long elapsed = now - lastFpsTime;
@@ -168,7 +164,7 @@ public class Camera extends StackPane {
                 // 相对鼠标模式：用增量累积偏移
                 targetOffsetX += RelativeMouse.pollDeltaX(event);
                 targetOffsetY += RelativeMouse.pollDeltaY(event);
-                // warpBack由AnimationTimer每帧末尾统一执行
+                RelativeMouse.warpBack();
             } else {
                 // 绝对鼠标模式：原有逻辑
                 double currentX = event.getSceneX() - 0.5 * viewportWidth;
@@ -184,7 +180,7 @@ public class Camera extends StackPane {
         if (event.getButton() == MouseButton.SECONDARY) {
             freeze();
             isDragging = true;
-            RelativeMouse.enter(getScene(), null, event.getSceneX(), event.getSceneY());
+            RelativeMouse.enter(getScene());
             dragStartX = event.getSceneX() - 0.5 * viewportWidth;
             dragStartY = event.getSceneY() - 0.5 * viewportHeight;
             dragStartOffsetX = targetOffsetX;
