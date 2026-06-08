@@ -9,6 +9,7 @@ import game.slice.ConfiguredStaticSlice;
 import game.slice.Slice;
 import game.window.Camera;
 import game.window.MiniMap;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
 import java.util.ArrayList;
@@ -96,9 +97,9 @@ public final class GameAPI {
     public static void removeSlice(Slice slice) {
         slice.onUnload();
         // 从父容器移除
-        javafx.scene.Parent parent = slice.getParent();
+        Pane parent = (Pane) slice.getParent();
         if (parent != null) {
-            parent.getChildrenUnmodifiable().remove(slice);
+            parent.getChildren().remove(slice);
         }
         allSlices.remove(slice);
     }
