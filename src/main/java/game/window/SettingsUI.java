@@ -62,6 +62,7 @@ public class SettingsUI extends StackPane {
     // 设置界面自身配置
     private SettingsConfig settingsConfig;
     private StackPane overlay;
+    private SliceEditorUI sliceEditor;
 
     // 当前生效的配置对象（用于取消时恢复）
     private final Map<String, Object> savedConfigs = new LinkedHashMap<>();
@@ -88,6 +89,7 @@ public class SettingsUI extends StackPane {
         loadSavedConfigs();
         buildUI();
         setupEscHandler();
+        sliceEditor = new SliceEditorUI();
     }
 
     /**
@@ -318,7 +320,10 @@ public class SettingsUI extends StackPane {
         Button resetBtn = createStyledButton(TextLan.get("SettingsUI_ResetDefault"), "#FF9800");
         resetBtn.setOnAction(e -> resetToDefaults());
 
-        bar.getChildren().addAll(saveBtn, cancelBtn, resetBtn);
+        Button editBtn = createStyledButton(TextLan.get("SettingsUI_Edit"), "#2196F3");
+        editBtn.setOnAction(e -> sliceEditor.show());
+
+        bar.getChildren().addAll(saveBtn, cancelBtn, resetBtn, editBtn);
         return bar;
     }
 

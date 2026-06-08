@@ -3,10 +3,22 @@
   "SettingsUI_Save": "💾 保存",
   "SettingsUI_Cancel": "❌ 取消",
   "SettingsUI_ResetDefault": "🔄 还原默认配置",
+  "SettingsUI_Edit": "📝 编辑",
   "SettingsUI_GameConfig": "🎮 游戏配置",
   "SettingsUI_StageConfig": "🖥 窗口配置",
   "SettingsUI_CameraConfig": "📷 相机配置",
   "SettingsUI_MiniMapConfig": "🗺 小地图配置",
   "SettingsUI_SettingsConfig": "🔧 设置界面配置",
-  "DialogSystem_Test1": "你好，旅行者。\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！"
+  "DialogSystem_Test1": "你好，旅行者。\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！\n欢迎来到这个世界！",
+  "SliceEditor_Title": "📝 Slice 编辑器",
+  "SliceEditor_GenerateTitle": "生成新 Slice",
+  "SliceEditor_SelectDef": "选择定义：",
+  "SliceEditor_Name": "名称：",
+  "SliceEditor_MapX": "地图 X：",
+  "SliceEditor_MapY": "地图 Y：",
+  "SliceEditor_Moved": "可移动",
+  "SliceEditor_Generate": "✨ 生成",
+  "SliceEditor_CurrentSlices": "当前 Slice 列表",
+  "SliceEditor_Remove": "❌ 删除",
+  "SliceEditor_Close": "关闭"
 }
