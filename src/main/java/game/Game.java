@@ -2,6 +2,7 @@ package game;
 
 import config.*;
 import core.CoreAPI;
+import core.GameAPI;
 import event.EventBus;
 import event.MapTransformEvent;
 import event.StageSizeChange;
@@ -30,9 +31,6 @@ public class Game {
     Camera camera;
     StackPane static1;
     StackPane move;
-    /** 存储所有碰撞相关 slice，用于碰撞检测 */
-    private static final java.util.List<Slice> allSlices = new java.util.ArrayList<>();
-
     /** 当前活跃碰撞对集合（pair key），用于进出碰撞检测 */
     private static final java.util.Set<Long> activeCollisions = java.util.concurrent.ConcurrentHashMap.newKeySet();
     // 配置文件路径
@@ -70,8 +68,12 @@ public class Game {
         initCamera();
         initStatic();
         initMove();
+        // 第一次注入（moveLayer/staticLayer 就绪，miniMap 尚未创建）
+        GameAPI.init(camera, null, move, static1, stage.getJavafxStage());
         initSlices();
         initMiniMap();
+        // 第二次注入（miniMap 就绪，更新引用）
+        GameAPI.init(camera, miniMap, move, static1, stage.getJavafxStage());
         // 先添加 map（底层），再添加 camera（顶层，拦截输入），最后添加小地图（最顶层），设置界面（最最顶层）
         root.getChildren().add(map);
         root.getChildren().add(camera);
@@ -82,7 +84,7 @@ public class Game {
         initDialogSystem();
         initTimeSystem();
     }
-    
+
     private void initStatic() {
         static1 = new StackPane();
         PaneSizeManager.add(static1, 1);
@@ -108,23 +110,12 @@ public class Game {
         // 2. 加载地图文件，展开为实例列表
         java.util.List<config.SliceConfig> configs = config.SliceInjector.loadMap("saves/default/map/test.json");
         for (config.SliceConfig cfg : configs) {
-            game.slice.Slice slice;
-            if (cfg.moved) {
-                slice = new game.slice.ConfiguredMoveSlice(cfg);
-                move.getChildren().add(slice);
-            } else {
-                slice = new game.slice.ConfiguredStaticSlice(cfg);
-                static1.getChildren().add(slice);
-            }
-            slice.onLoad();
-            allSlices.add(slice);
-            // 打印加载信息，便于调试
-            System.out.println("SliceInjector: 已加载 Slice [ID=" + cfg.ID + ", mapId=" + cfg.mapId + ", name=" + cfg.name + "] moved=" + cfg.moved + " attributes=" + cfg.attributes + " methods=" + cfg.methods);
+            GameAPI.spawnSlice(cfg);
         }
     }
-    
-    
-    
+
+
+
     private void initRoot() {
         root = stage.getRoot();
         root.heightProperty().addListener((obs, oldVal, newVal) -> sendRootSizeChangedEvent(root.getWidth(), newVal.doubleValue(),root.getWidth(), oldVal.doubleValue()));
@@ -153,7 +144,7 @@ public class Game {
         bgView.fitHeightProperty().bind(map.heightProperty());
         map.getChildren().add(bgView);
         moveWithMap(map);
-        
+
     }
 
     private void initCamera() throws Exception {
@@ -210,18 +201,6 @@ public class Game {
     }
 
     /**
-     * 根据名称在所有已加载的 Slice 中查找
-     */
-    public static Slice findSliceByName(String name) {
-        for (Slice slice : allSlices) {
-            if (name.equals(slice.getName())) {
-                return slice;
-            }
-        }
-        return null;
-    }
-
-    /**
      * 加载 TimeConfig 并启动 TimeSystem
      */
     private void initTimeSystem() throws Exception {
@@ -230,31 +209,6 @@ public class Game {
         if (timeConfig.autoStart) {
             timeSystem.start();
         }
-    }
-
-    /**
-     * 应用相机配置（运行时热更新）
-     */
-    public void applyCameraConfig(CameraConfig config) {
-        camera.use(config);
-    }
-
-    /**
-     * 应用小地图配置（运行时热更新）
-     */
-    public void applyMiniMapConfig(MiniMapConfig config) {
-        miniMap.applyConfig(config);
-    }
-
-    /**
-     * 应用窗口配置（运行时热更新）
-     */
-    public void applyStageConfig(StageConfig config) {
-        javafx.stage.Stage javafxStage = stage.getJavafxStage();
-        javafxStage.setTitle(config.title);
-        javafxStage.setWidth(config.width);
-        javafxStage.setHeight(config.height);
-        javafxStage.setFullScreenExitHint(config.fullScreenExitHint);
     }
 
     /**
@@ -272,7 +226,7 @@ public class Game {
      * 记录碰撞进出状态，每次进出视为一次碰撞
      */
     public static void checkCollisions(Slice self) {
-        for (Slice other : allSlices) {
+        for (Slice other : GameAPI.getAllSlices()) {
             if (other == self) continue;
             long pairKey = collisionPairKey(self, other);
             boolean colliding = CollisionUtil.checkCollision(self, other);

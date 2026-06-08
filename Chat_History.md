@@ -296,3 +296,17 @@
   - CoreAPI为单例模式，重复创建抛出IllegalStateException
   - 碰撞检测系统（allSlices/checkCollisions/clampToBoundary）留在Game中——属于游戏逻辑而非基础设施
 - 编译验证: mvn clean compile BUILD SUCCESS
+
+## 对话 30: 创建 GameAPI 游戏操作门面
+- 时间: 2026-06-08
+- 要求: 创建GameAPI封装Slice管理、Camera操作、配置热更新等游戏操作API；创建说明文档
+- 实现:
+  - 新建 src/main/java/core/GameAPI.java — 游戏操作API，与CoreAPI（基础设施）互补
+  - Game.java — 移除 findSliceByName、applyCameraConfig、applyMiniMapConfig、applyStageConfig；allSlices 移入 GameAPI；initSlices 使用 GameAPI.spawnSlice；checkCollisions 通过 GameAPI.getAllSlices() 读取碰撞池
+  - SettingsUI.java — applyToGame 改为调用 GameAPI.applyXxxConfig
+  - 新建 GameAPI.md — 说明文档，首行标注 ⚠️ 修改GameAPI.java时须同步更新
+- GameAPI 提供的方法:
+  - Slice 管理: spawnSlice, removeSlice, findSlice, getAllSlices
+  - Camera 操作: cameraJumpTo, cameraFreeze, getCameraZoom
+  - 配置热更新: applyCameraConfig, applyMiniMapConfig, applyStageConfig
+- 编译验证: mvn clean compile BUILD SUCCESS

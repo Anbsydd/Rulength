@@ -1,7 +1,7 @@
 package game.window;
 
 import config.*;
-import game.Game;
+import core.GameAPI;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -410,14 +410,11 @@ public class SettingsUI extends StackPane {
      * 将配置应用到游戏组件
      */
     private void applyToGame(String fileName, Object config) {
-        Game game = core.CoreAPI.stageRef.getGame();
-        if (game == null) return;
-
         switch (fileName) {
-            case "cameraConfig.json" -> game.applyCameraConfig((CameraConfig) config);
-            case "miniMapConfig.json" -> game.applyMiniMapConfig((MiniMapConfig) config);
+            case "cameraConfig.json" -> GameAPI.applyCameraConfig((CameraConfig) config);
+            case "miniMapConfig.json" -> GameAPI.applyMiniMapConfig((MiniMapConfig) config);
             case "gameConfig.json" -> {} // 线程池参数运行时不可更改，保存后下次启动生效
-            case "stageConfig.json" -> game.applyStageConfig((StageConfig) config);
+            case "stageConfig.json" -> GameAPI.applyStageConfig((StageConfig) config);
             case "settingsConfig.json" -> applySettingsConfig((SettingsConfig) config);
         }
     }
